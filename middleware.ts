@@ -1,24 +1,23 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getAuthUser } from '@/lib/auth'
 
 // Define protected routes
 const protectedRoutes = ['/dashboard', '/profile', '/settings']
-const authRoutes = ['/login', '/signup', '/forgot-password']
+const authRoutes = ['/login', '/signup', '/forgot-password', '/reset-password', '/verify-email']
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
-  // Get the current user
-  const user = await getAuthUser(request)
+  // Get the auth token from cookies
+  const token = request.cookies.get('auth-token')?.value
   
   // Redirect authenticated users away from auth pages
-  if (user && authRoutes.includes(pathname)) {
+  if (token && authRoutes.includes(pathname)) {
     return NextResponse.redirect(new URL('/', request.url))
   }
   
   // Redirect unauthenticated users away from protected pages
-  if (!user && protectedRoutes.some(route => pathname.startsWith(route))) {
+  if (!token && protectedRoutes.some(route => pathname.startsWith(route))) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)

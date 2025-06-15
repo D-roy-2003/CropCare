@@ -52,10 +52,16 @@ export function Navbar() {
 
   const handleLogout = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" })
-      localStorage.removeItem("user")
-      setUser(null)
-      router.push("/")
+      const response = await fetch("/api/auth/logout", { 
+        method: "POST",
+        credentials: 'include'
+      })
+      
+      if (response.ok) {
+        localStorage.removeItem("user")
+        setUser(null)
+        router.push("/")
+      }
     } catch (error) {
       console.error("Logout error:", error)
       // Still clear local state even if API call fails

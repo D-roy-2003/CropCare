@@ -1,15 +1,22 @@
 import jwt from 'jsonwebtoken'
 import { NextRequest } from 'next/server'
-import User, { IUser } from '@/models/User'
-import connectDB from '@/lib/mongodb'
 
-const JWT_SECRET = process.env.JWT_SECRET!
+const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-key'
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d'
 
 export interface JWTPayload {
   userId: string
   email: string
   username: string
+}
+
+export interface UserData {
+  id: string
+  firstName: string
+  lastName: string
+  username: string
+  email: string
+  isEmailVerified: boolean
 }
 
 export function generateToken(payload: JWTPayload): string {
@@ -20,18 +27,24 @@ export function verifyToken(token: string): JWTPayload {
   return jwt.verify(token, JWT_SECRET) as JWTPayload
 }
 
-export async function getUserFromToken(token: string): Promise<IUser | null> {
+export async function getUserFromToken(token: string): Promise<any | null> {
   try {
     const decoded = verifyToken(token)
+    
+    // Dynamic import to avoid circular dependencies
+    const { default: connectDB } = await import('@/lib/mongodb')
+    const { default: User } = await import('@/models/User')
+    
     await connectDB()
     const user = await User.findById(decoded.userId).select('-password')
     return user
   } catch (error) {
+    console.error('Error getting user from token:', error)
     return null
   }
 }
 
-export async function getAuthUser(request: NextRequest): Promise<IUser | null> {
+export async function getAuthUser(request: NextRequest): Promise<any | null> {
   try {
     const token = request.cookies.get('auth-token')?.value || 
                  request.headers.get('authorization')?.replace('Bearer ', '')
@@ -40,11 +53,12 @@ export async function getAuthUser(request: NextRequest): Promise<IUser | null> {
     
     return await getUserFromToken(token)
   } catch (error) {
+    console.error('Error getting auth user:', error)
     return null
   }
 }
 
-export function createAuthResponse(user: IUser) {
+export function createAuthResponse(user: any) {
   const token = generateToken({
     userId: user._id.toString(),
     email: user.email,
