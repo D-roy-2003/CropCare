@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Leaf, Brain, CloudRain, TrendingUp, Shield, Users } from "lucide-react"
+import { Leaf, Brain, CloudRain, TrendingUp, Shield, Users, Target, Lightbulb, Heart, ChevronRight } from "lucide-react"
 import Link from "next/link"
 
 export default function HomePage() {
@@ -11,9 +11,6 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-green-50 to-blue-50 dark:from-green-950 dark:to-blue-950 py-20">
         <div className="container px-4">
           <div className="max-w-4xl mx-auto text-center space-y-6">
-            <Badge variant="secondary" className="mb-4">
-              Powered by CNN Models
-            </Badge>
             <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white">
               Smart Agriculture with <span className="text-green-600 dark:text-green-400">AI Technology</span>
             </h1>
@@ -29,6 +26,76 @@ export default function HomePage() {
                 <Link href="/recommendation">Get Crop Recommendations</Link>
               </Button>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About Us Section */}
+      <section className="py-20 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950 dark:to-emerald-950">
+        <div className="container px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+              About Us
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {/* What's Our Motive */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center mb-4">
+                    <Heart className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-green-600 transition-colors" />
+                </div>
+                <CardTitle className="text-lg">What's Our Motive</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  To empower farmers with cutting-edge AI technology that helps them identify crop diseases early, 
+                  reduce agricultural losses, and increase productivity for sustainable farming practices.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* What's our Future Plans */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-4">
+                    <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                </div>
+                <CardTitle className="text-lg">What's our Future Plans</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Expanding our AI models to cover more crop varieties, integrating IoT sensors for real-time monitoring, 
+                  and developing mobile applications for farmers in remote areas worldwide.
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* What We Provide */}
+            <Card className="group hover:shadow-lg transition-all duration-300 border-0 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center mb-4">
+                    <Target className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
+                </div>
+                <CardTitle className="text-lg">What We Provide</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  Advanced disease detection, intelligent crop recommendations, accurate weather forecasting, 
+                  and comprehensive agricultural insights powered by machine learning and data analytics.
+                </p>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
