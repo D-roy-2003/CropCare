@@ -48,6 +48,26 @@ export function Navbar() {
     } finally {
       setIsLoading(false)
     }
+
+    // Listen for localStorage changes (cross-tab and same tab)
+    const handleStorage = () => {
+      try {
+        const userData = localStorage.getItem("user")
+        if (userData) {
+          setUser(JSON.parse(userData))
+        } else {
+          setUser(null)
+        }
+      } catch {
+        setUser(null)
+      }
+    }
+    window.addEventListener("storage", handleStorage)
+    window.addEventListener("user-updated", handleStorage)
+    return () => {
+      window.removeEventListener("storage", handleStorage)
+      window.removeEventListener("user-updated", handleStorage)
+    }
   }, [])
 
   const handleLogout = async () => {

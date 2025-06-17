@@ -58,6 +58,8 @@ export default function LoginPage() {
       // Store user data in localStorage if needed
       if (result.user) {
         localStorage.setItem("user", JSON.stringify(result.user))
+        // Dispatch custom event for same-tab updates
+        window.dispatchEvent(new Event("user-updated"))
       }
 
       // Redirect to dashboard or home page

@@ -13,12 +13,14 @@ import Image from "next/image"
 
 export default function DiseasePredictionPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState<any>(null)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
+      setSelectedFile(file)
       const reader = new FileReader()
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string)
@@ -29,20 +31,48 @@ export default function DiseasePredictionPage() {
   }
 
   const analyzeImage = async () => {
-    if (!selectedImage) return
+    if (!selectedFile) return
 
     setIsAnalyzing(true)
-    // Simulate API call
-    setTimeout(() => {
-      setResult({
-        disease: "Leaf Blight",
-        confidence: 92.5,
-        severity: "Moderate",
-        treatment: "Apply copper-based fungicide and improve drainage",
-        prevention: "Ensure proper spacing between plants and avoid overhead watering",
+    setResult(null)
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await fetch("http://localhost:8000/predict", {
+        method: "POST",
+        body: formData,
       })
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      const data = await response.json()
+      console.log(data)
+
+      // Assuming the backend returns the top prediction and Gemini results
+      const topPrediction = data.predictions[0]
+      setResult({
+        disease: topPrediction.class,
+        confidence: topPrediction.confidence,
+        severity: data.gemini_severity,
+        treatment: data.gemini_treatment,
+        prevention: data.gemini_prevention,
+      })
+    } catch (error) {
+      console.error("Error analyzing image:", error)
+      setResult({
+        disease: "Error",
+        confidence: 0,
+        severity: "Could not retrieve severity",
+        treatment: "Could not retrieve treatment information.",
+        prevention: "Could not retrieve prevention information.",
+      })
+    } finally {
       setIsAnalyzing(false)
-    }, 3000)
+    }
   }
 
   return (

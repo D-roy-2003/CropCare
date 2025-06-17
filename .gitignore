@@ -109,3 +109,6 @@ coverage/
 
 # Misc
 *.tsbuildinfo
+
+#ML Model training Folder
+/mlmodel_training

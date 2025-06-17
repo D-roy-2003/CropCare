@@ -65,10 +65,14 @@ export default function SignupPage() {
       }
 
       setSuccess(result.message)
-      
-      // Redirect to login page after successful signup
+      // Store user data in localStorage if present in response
+      if (result.user) {
+        localStorage.setItem("user", JSON.stringify(result.user))
+        window.dispatchEvent(new Event("user-updated"))
+      }
+      // Redirect to home page after successful signup
       setTimeout(() => {
-        router.push("/login")
+        router.push("/")
       }, 3000)
 
     } catch (err: any) {
