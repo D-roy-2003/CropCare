@@ -26,8 +26,8 @@ app = FastAPI(
 )
 
 # Configuration
-MODEL_PATH = "../ml_models/vit_model_version_one.pth"
-CLASS_NAMES_PATH = "../ml_models/class_names.json"
+MODEL_PATH = "vit_model_version_one.pth"
+CLASS_NAMES_PATH = "class_names.json"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 IMG_SIZE = 224
 

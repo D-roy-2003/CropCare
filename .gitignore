@@ -112,3 +112,6 @@ coverage/
 
 #ML Model training Folder
 /mlmodel_training
+
+#ML MODELS
+/backend-api/vit_model_version_one.pth
