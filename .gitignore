@@ -117,5 +117,5 @@ coverage/
 /backend-api/vit_model_version_one.pth
 
 CropCare-mirror
+backend-api
 ml_models
-/backend-api
