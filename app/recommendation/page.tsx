@@ -11,15 +11,17 @@ import { Leaf, MapPin, Thermometer, Droplets, Loader2 } from "lucide-react"
 
 export default function RecommendationPage() {
   const [formData, setFormData] = useState({
-    location: "",
-    soilType: "",
-    season: "",
-    rainfall: "",
+    N: "",
+    P: "",
+    K: "",
     temperature: "",
-    farmSize: "",
+    humidity: "",
+    ph: "",
+    rainfall: "",
   })
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [recommendations, setRecommendations] = useState<any[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -27,36 +29,34 @@ export default function RecommendationPage() {
 
   const generateRecommendations = async () => {
     setIsAnalyzing(true)
-    // Simulate API call
-    setTimeout(() => {
-      setRecommendations([
-        {
-          crop: "Rice",
-          suitability: 95,
-          expectedYield: "4.5 tons/hectare",
-          profitability: "High",
-          season: "Kharif",
-          reasons: ["Ideal soil pH", "Sufficient rainfall", "Optimal temperature"],
-        },
-        {
-          crop: "Wheat",
-          suitability: 88,
-          expectedYield: "3.2 tons/hectare",
-          profitability: "Medium",
-          season: "Rabi",
-          reasons: ["Good soil drainage", "Suitable climate", "Market demand"],
-        },
-        {
-          crop: "Sugarcane",
-          suitability: 82,
-          expectedYield: "65 tons/hectare",
-          profitability: "High",
-          season: "Annual",
-          reasons: ["Rich soil nutrients", "Adequate water supply"],
-        },
-      ])
-      setIsAnalyzing(false)
-    }, 2000)
+    setRecommendations([])
+    setError(null)
+    try {
+      const res = await fetch("/api/recommendation", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          N: Number(formData.N),
+          P: Number(formData.P),
+          K: Number(formData.K),
+          temperature: Number(formData.temperature),
+          humidity: Number(formData.humidity),
+          ph: Number(formData.ph),
+          rainfall: Number(formData.rainfall),
+        }),
+      })
+
+      if (!res.ok) {
+        const errorData = await res.json()
+        throw new Error(errorData.error || "An unknown error occurred.")
+      }
+
+      const data = await res.json()
+      setRecommendations(data.crops || [])
+    } catch (err: any) {
+      setError(err.message)
+    }
+    setIsAnalyzing(false)
   }
 
   return (
@@ -82,78 +82,33 @@ export default function RecommendationPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input
-                    id="location"
-                    placeholder="Enter your location"
-                    value={formData.location}
-                    onChange={(e) => handleInputChange("location", e.target.value)}
-                  />
+                  <Label htmlFor="N">Nitrogen (kg/ha)</Label>
+                  <Input id="N" type="number" placeholder="e.g., 90" value={formData.N} onChange={e => handleInputChange("N", e.target.value)} />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="soil-type">Soil Type</Label>
-                  <Select onValueChange={(value) => handleInputChange("soilType", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select soil type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="clay">Clay</SelectItem>
-                      <SelectItem value="sandy">Sandy</SelectItem>
-                      <SelectItem value="loamy">Loamy</SelectItem>
-                      <SelectItem value="silt">Silt</SelectItem>
-                      <SelectItem value="peaty">Peaty</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="P">Phosphorous (kg/ha)</Label>
+                  <Input id="P" type="number" placeholder="e.g., 45" value={formData.P} onChange={e => handleInputChange("P", e.target.value)} />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="season">Season</Label>
-                  <Select onValueChange={(value) => handleInputChange("season", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select season" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kharif">Kharif (Monsoon)</SelectItem>
-                      <SelectItem value="rabi">Rabi (Winter)</SelectItem>
-                      <SelectItem value="zaid">Zaid (Summer)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="K">Potassium (kg/ha)</Label>
+                  <Input id="K" type="number" placeholder="e.g., 40" value={formData.K} onChange={e => handleInputChange("K", e.target.value)} />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="rainfall">Annual Rainfall (mm)</Label>
-                  <Input
-                    id="rainfall"
-                    type="number"
-                    placeholder="e.g., 1200"
-                    value={formData.rainfall}
-                    onChange={(e) => handleInputChange("rainfall", e.target.value)}
-                  />
+                  <Label htmlFor="temperature">Temperature (°C)</Label>
+                  <Input id="temperature" type="number" placeholder="e.g., 25.5" value={formData.temperature} onChange={e => handleInputChange("temperature", e.target.value)} />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="temperature">Average Temperature (°C)</Label>
-                  <Input
-                    id="temperature"
-                    type="number"
-                    placeholder="e.g., 25"
-                    value={formData.temperature}
-                    onChange={(e) => handleInputChange("temperature", e.target.value)}
-                  />
+                  <Label htmlFor="humidity">Humidity (%)</Label>
+                  <Input id="humidity" type="number" placeholder="e.g., 80.2" value={formData.humidity} onChange={e => handleInputChange("humidity", e.target.value)} />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="farm-size">Farm Size (hectares)</Label>
-                  <Input
-                    id="farm-size"
-                    type="number"
-                    placeholder="e.g., 2.5"
-                    value={formData.farmSize}
-                    onChange={(e) => handleInputChange("farmSize", e.target.value)}
-                  />
+                  <Label htmlFor="ph">Soil pH</Label>
+                  <Input id="ph" type="number" placeholder="e.g., 6.5" value={formData.ph} onChange={e => handleInputChange("ph", e.target.value)} />
                 </div>
-
+                <div className="space-y-2">
+                  <Label htmlFor="rainfall">Rainfall (mm)</Label>
+                  <Input id="rainfall" type="number" placeholder="e.g., 200" value={formData.rainfall} onChange={e => handleInputChange("rainfall", e.target.value)} />
+                </div>
                 <Button onClick={generateRecommendations} disabled={isAnalyzing} className="w-full" size="lg">
                   {isAnalyzing ? (
                     <>
@@ -179,7 +134,14 @@ export default function RecommendationPage() {
                 <CardDescription>AI-powered crop recommendations based on your farm conditions</CardDescription>
               </CardHeader>
               <CardContent>
-                {!recommendations.length && !isAnalyzing && (
+                {error && (
+                  <div className="text-center py-12 text-red-500 dark:text-red-400">
+                    <p className="font-semibold">An error occurred</p>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                )}
+
+                {!recommendations.length && !isAnalyzing && !error && (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     Fill in your farm details to get personalized crop recommendations
                   </div>
@@ -201,29 +163,30 @@ export default function RecommendationPage() {
                             <div>
                               <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{rec.crop}</h3>
                               <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="secondary">{rec.suitability}% Suitable</Badge>
-                                <Badge variant={rec.profitability === "High" ? "default" : "outline"}>
-                                  {rec.profitability} Profit
-                                </Badge>
+                                {rec.suitability && <Badge variant="secondary">{rec.suitability}% Suitable</Badge>}
+                                {rec.profit && (
+                                  <Badge variant={rec.profit === "High Profit" ? "default" : "outline"}>
+                                    {rec.profit}
+                                  </Badge>
+                                )}
                               </div>
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-gray-600 dark:text-gray-300">Expected Yield</p>
-                              <p className="font-semibold">{rec.expectedYield}</p>
+                              <p className="font-semibold">{rec.expected_yield}</p>
                             </div>
                           </div>
-
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Best Season:</p>
-                              <Badge variant="outline">{rec.season}</Badge>
+                              <Badge variant="outline">{rec.best_season}</Badge>
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Why Recommended:
                               </p>
                               <div className="flex flex-wrap gap-1">
-                                {rec.reasons.map((reason: string, idx: number) => (
+                                {rec.why_recommended && rec.why_recommended.map((reason: string, idx: number) => (
                                   <Badge key={idx} variant="secondary" className="text-xs">
                                     {reason}
                                   </Badge>

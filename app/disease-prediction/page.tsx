@@ -40,7 +40,7 @@ export default function DiseasePredictionPage() {
     formData.append('file', selectedFile);
 
     try {
-      const response = await fetch("https://your-backend.onrender.com/predict", {
+      const response = await fetch("/api/predict", {
         method: "POST",
         body: formData,
       })

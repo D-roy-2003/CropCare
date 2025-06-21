@@ -115,3 +115,7 @@ coverage/
 
 #ML MODELS
 /backend-api/vit_model_version_one.pth
+
+CropCare-mirror
+ml_models
+/backend-api
