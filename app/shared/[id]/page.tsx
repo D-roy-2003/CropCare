@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -24,7 +24,8 @@ import {
   Loader2,
   Copy,
   MessageCircle,
-  Mail
+  Mail,
+  ExternalLink
 } from "lucide-react"
 import Image from "next/image"
 import { generateDiseasePDF } from "@/lib/pdf-generator"
@@ -44,66 +45,51 @@ interface DiseaseDetails {
   imageUrl: string
 }
 
-export default function DiseaseDetailsPage() {
-  const searchParams = useSearchParams()
+export default function SharedReportPage() {
+  const params = useParams()
   const router = useRouter()
   const [diseaseData, setDiseaseData] = useState<DiseaseDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
-  const [shareUrl, setShareUrl] = useState<string | null>(null)
-  const [isCreatingShare, setIsCreatingShare] = useState(false)
 
   useEffect(() => {
-    // Get data from URL parameters
-    const disease = searchParams.get('disease')
-    const confidence = searchParams.get('confidence')
-    const severity = searchParams.get('severity')
-    const treatment = searchParams.get('treatment')
-    const prevention = searchParams.get('prevention')
-    const imageUrl = searchParams.get('imageUrl')
-
-    if (disease && confidence && severity && treatment && prevention && imageUrl) {
-      setDiseaseData({
-        disease,
-        confidence: parseFloat(confidence),
-        severity,
-        treatment,
-        prevention,
-        imageUrl
-      })
-    }
-    setIsLoading(false)
-  }, [searchParams])
-
-  // Create shareable link when component mounts
-  useEffect(() => {
-    const createShareableLink = async () => {
-      if (!diseaseData) return
-
-      setIsCreatingShare(true)
+    const fetchSharedReport = async () => {
       try {
-        const response = await fetch('/api/share', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(diseaseData)
-        })
-
-        if (response.ok) {
-          const data = await response.json()
-          setShareUrl(data.shareUrl)
+        const response = await fetch(`/api/share/${params.id}`)
+        
+        if (!response.ok) {
+          if (response.status === 404) {
+            setError('Report not found')
+          } else if (response.status === 410) {
+            setError('This report has expired')
+          } else {
+            setError('Failed to load report')
+          }
+          return
         }
-      } catch (error) {
-        console.error('Failed to create shareable link:', error)
+        
+        const data = await response.json()
+        setDiseaseData({
+          disease: data.disease,
+          confidence: data.confidence,
+          severity: data.severity,
+          treatment: data.treatment,
+          prevention: data.prevention,
+          imageUrl: data.imageUrl
+        })
+      } catch (err) {
+        setError('Failed to load report')
       } finally {
-        setIsCreatingShare(false)
+        setIsLoading(false)
       }
     }
 
-    if (diseaseData) {
-      createShareableLink()
+    if (params.id) {
+      fetchSharedReport()
     }
-  }, [diseaseData])
+  }, [params.id])
 
   const getDetailedTreatment = (disease: string, basicTreatment: string) => {
     // Enhanced treatment recommendations based on disease type
@@ -298,7 +284,7 @@ ${isHealthy ?
 
 🔗 View full report:`
 
-    return { title, text, url: shareUrl || window.location.href }
+    return { title, text, url: window.location.href }
   }
 
   const handleNativeShare = async () => {
@@ -318,8 +304,7 @@ ${isHealthy ?
 
   const handleCopyLink = async () => {
     try {
-      const urlToCopy = shareUrl || window.location.href
-      await navigator.clipboard.writeText(urlToCopy)
+      await navigator.clipboard.writeText(window.location.href)
       setCopySuccess(true)
       setTimeout(() => setCopySuccess(false), 2000)
     } catch (error) {
@@ -351,27 +336,32 @@ ${isHealthy ?
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Loading disease details...</p>
+          <p className="text-gray-600 dark:text-gray-300">Loading shared report...</p>
         </div>
       </div>
     )
   }
 
-  if (!diseaseData) {
+  if (error || !diseaseData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="max-w-md w-full">
           <CardHeader>
-            <CardTitle className="text-center">No Data Found</CardTitle>
+            <CardTitle className="text-center">Report Not Available</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-center text-gray-600 dark:text-gray-300 mb-4">
-              Disease analysis data not found. Please go back and run a new analysis.
+              {error || 'This report could not be found or has expired.'}
             </p>
-            <Button onClick={() => router.push('/disease-prediction')} className="w-full">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Disease Prediction
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={() => router.push('/')} variant="outline" className="flex-1">
+                Go to Home
+              </Button>
+              <Button onClick={() => router.push('/disease-prediction')} className="flex-1">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Try Crop Care
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -387,29 +377,19 @@ ${isHealthy ?
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Button 
-            variant="outline" 
-            onClick={() => router.back()}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Results
-          </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Leaf className="h-6 w-6 text-green-600" />
+              <span className="text-xl font-bold text-green-700">Crop Care</span>
+            </div>
+            <Badge variant="outline">Shared Report</Badge>
+          </div>
           <div className="flex gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={isCreatingShare}>
-                  {isCreatingShare ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating Link...
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </>
-                  )}
+                <Button variant="outline">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -671,12 +651,19 @@ ${isHealthy ?
 
         {/* Action Buttons */}
         <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-          <Button onClick={() => router.push('/disease-prediction')} variant="outline" size="lg">
-            Analyze Another Image
+          <Button onClick={() => router.push('/')} variant="outline" size="lg">
+            Visit Crop Care
           </Button>
-          <Button onClick={() => router.push('/recommendation')} size="lg">
-            Get Crop Recommendations
+          <Button onClick={() => router.push('/disease-prediction')} size="lg">
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Try Disease Detection
           </Button>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-12 text-center text-sm text-gray-500 border-t pt-6">
+          <p>This report was generated by <strong>Crop Care AI</strong> - Advanced agricultural disease detection platform</p>
+          <p className="mt-1">Empowering farmers with AI-powered solutions for sustainable agriculture</p>
         </div>
       </div>
     </div>
