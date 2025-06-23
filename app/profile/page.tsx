@@ -391,15 +391,6 @@ export default function ProfilePage() {
                       )}
                     </div>
                   </div>
-
-                  {!user.isEmailVerified && (
-                    <Alert className="mt-6">
-                      <Shield className="h-4 w-4" />
-                      <AlertDescription>
-                        Your email address is not verified. Please check your inbox for a verification email.
-                      </AlertDescription>
-                    </Alert>
-                  )}
                 </CardContent>
               </Card>
 
