@@ -52,7 +52,7 @@ export default function DiseaseDetailsPage() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
   const [copySuccess, setCopySuccess] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
-  const [isCreatingShare, setIsCreatingShare] = useState(false)
+  const [shareError, setShareError] = useState<string | null>(null)
 
   useEffect(() => {
     // Get data from URL parameters
@@ -76,34 +76,39 @@ export default function DiseaseDetailsPage() {
     setIsLoading(false)
   }, [searchParams])
 
-  // Create shareable link when component mounts
-  useEffect(() => {
-    const createShareableLink = async () => {
-      if (!diseaseData) return
+  // Create shareable link when needed (not automatically)
+  const createShareableLink = async () => {
+    if (!diseaseData || shareUrl) return shareUrl
 
-      setIsCreatingShare(true)
-      try {
-        const response = await fetch('/api/share', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(diseaseData)
-        })
+    try {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
 
-        if (response.ok) {
-          const data = await response.json()
-          setShareUrl(data.shareUrl)
-        }
-      } catch (error) {
-        console.error('Failed to create shareable link:', error)
-      } finally {
-        setIsCreatingShare(false)
+      const response = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(diseaseData),
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      if (response.ok) {
+        const data = await response.json()
+        setShareUrl(data.shareUrl)
+        return data.shareUrl
+      } else {
+        throw new Error('Failed to create shareable link')
       }
+    } catch (error: any) {
+      console.error('Failed to create shareable link:', error)
+      setShareError('Failed to create shareable link')
+      // Return current page URL as fallback
+      const fallbackUrl = window.location.href
+      setShareUrl(fallbackUrl)
+      return fallbackUrl
     }
-
-    if (diseaseData) {
-      createShareableLink()
-    }
-  }, [diseaseData])
+  }
 
   const getDetailedTreatment = (disease: string, basicTreatment: string) => {
     // Enhanced treatment recommendations based on disease type
@@ -275,8 +280,11 @@ export default function DiseaseDetailsPage() {
     }
   }
 
-  const createShareableContent = () => {
+  const createShareableContent = async () => {
     if (!diseaseData) return { title: '', text: '', url: '' }
+
+    // Get or create shareable URL
+    const url = await createShareableLink()
 
     const isHealthy = diseaseData.disease === 'Healthy'
     const status = isHealthy ? '✅ Healthy Crop' : '⚠️ Disease Detected'
@@ -298,11 +306,11 @@ ${isHealthy ?
 
 🔗 View full report:`
 
-    return { title, text, url: shareUrl || window.location.href }
+    return { title, text, url: url || window.location.href }
   }
 
   const handleNativeShare = async () => {
-    const { title, text, url } = createShareableContent()
+    const { title, text, url } = await createShareableContent()
     
     if (navigator.share) {
       try {
@@ -318,8 +326,8 @@ ${isHealthy ?
 
   const handleCopyLink = async () => {
     try {
-      const urlToCopy = shareUrl || window.location.href
-      await navigator.clipboard.writeText(urlToCopy)
+      const url = await createShareableLink()
+      await navigator.clipboard.writeText(url || window.location.href)
       setCopySuccess(true)
       setTimeout(() => setCopySuccess(false), 2000)
     } catch (error) {
@@ -327,21 +335,21 @@ ${isHealthy ?
     }
   }
 
-  const handleWhatsAppShare = () => {
-    const { text, url } = createShareableContent()
+  const handleWhatsAppShare = async () => {
+    const { text, url } = await createShareableContent()
     const whatsappText = encodeURIComponent(`${text}\n\n${url}`)
     window.open(`https://wa.me/?text=${whatsappText}`, '_blank')
   }
 
-  const handleEmailShare = () => {
-    const { title, text, url } = createShareableContent()
+  const handleEmailShare = async () => {
+    const { title, text, url } = await createShareableContent()
     const subject = encodeURIComponent(title)
     const body = encodeURIComponent(`${text}\n\n${url}`)
     window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
   }
 
-  const handleSMSShare = () => {
-    const { text, url } = createShareableContent()
+  const handleSMSShare = async () => {
+    const { text, url } = await createShareableContent()
     const smsText = encodeURIComponent(`${text}\n\n${url}`)
     window.open(`sms:?body=${smsText}`, '_blank')
   }
@@ -398,18 +406,9 @@ ${isHealthy ?
           <div className="flex gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" disabled={isCreatingShare}>
-                  {isCreatingShare ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Creating Link...
-                    </>
-                  ) : (
-                    <>
-                      <Share2 className="h-4 w-4 mr-2" />
-                      Share
-                    </>
-                  )}
+                <Button variant="outline">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
