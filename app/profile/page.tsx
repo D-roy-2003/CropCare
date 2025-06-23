@@ -38,9 +38,46 @@ interface UserData {
   createdAt?: string
 }
 
+const mockProfile = {
+  fullName: 'Debangshu Roy',
+  phone: '9876543210',
+  countryCode: '+91',
+  city: 'Kolkata',
+  username: 'debu69',
+  email: 'test@email.com',
+  profileImage: '',
+};
+const mockStats = { scanned: 2, recommended: 0 };
+const mockScanned = [
+  { disease: 'Tomato Curl Virus', confidence: '94.87%', severity: 'Medium' },
+  { disease: 'Apple Cedar Rust', confidence: '94.87%', severity: 'Medium' },
+];
+const mockRecommended = [
+  { crop: 'jute', suitability: '4%', profit: 'Medium Profit', season: 'Kharif', yield: '2.0 tons/hectare', why: ['Sufficient rainfall', 'Adequate nitrogen levels'] },
+  { crop: 'maize', suitability: '70%', profit: 'High Profit', season: 'Kharif', yield: '6.0 tons/hectare', why: ['High N requirement met', 'Warm temperature suitable', 'Sufficient rainfall'] },
+  { crop: 'coffee', suitability: '63%', profit: 'High Profit', season: 'Annual', yield: '1.8 tons/hectare', why: ['High confidence prediction', 'Suitable temperature and humidity', 'Adaptable to soil pH'] },
+];
+
+const countryCodes = [
+  { code: '+1', name: 'US', flag: '🇺🇸' },
+  { code: '+44', name: 'UK', flag: '🇬🇧' },
+  { code: '+91', name: 'IN', flag: '🇮🇳' },
+  { code: '+33', name: 'FR', flag: '🇫🇷' },
+  { code: '+49', name: 'DE', flag: '🇩🇪' },
+  { code: '+81', name: 'JP', flag: '🇯🇵' },
+  { code: '+86', name: 'CN', flag: '🇨🇳' },
+  { code: '+234', name: 'NG', flag: '🇳🇬' },
+  { code: '+27', name: 'ZA', flag: '🇿🇦' },
+  { code: '+20', name: 'EG', flag: '🇪🇬' },
+];
+
 export default function ProfilePage() {
+  const [activePanel, setActivePanel] = useState<'settings' | 'scanned' | 'recommended'>('settings');
+  const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<{ fullName: string; phone: string; countryCode: string; city: string; username: string; email: string; profileImage: string; }>(mockProfile);
+  const [profileImage, setProfileImage] = useState('');
+  const [showSave, setShowSave] = useState(false);
   const [user, setUser] = useState<UserData | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [editForm, setEditForm] = useState({
     firstName: "",
@@ -179,287 +216,240 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* Breadcrumb Navigation */}
-      <div className="bg-white dark:bg-gray-900 border-b">
-        <div className="container px-4 py-3">
-          <nav className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
-            <Link href="/" className="hover:text-green-600 dark:hover:text-green-400 flex items-center">
-              <Home className="h-4 w-4 mr-1" />
-              Home
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span className="text-gray-900 dark:text-white font-medium">Profile</span>
-          </nav>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <main className="flex-1 bg-gray-50 dark:bg-gray-900 py-8">
-        <div className="container px-4 max-w-4xl mx-auto">
-          {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Profile</h1>
-                <p className="text-gray-600 dark:text-gray-300 mt-1">
-                  Manage your account settings and preferences
-                </p>
-              </div>
-              <Button 
-                onClick={handleLogout}
-                variant="destructive"
-                size="lg"
-                className="w-full sm:w-auto"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Profile Card */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader className="text-center">
-                  <div className="mx-auto mb-4 relative">
-                    <Avatar className="h-24 w-24">
-                      <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 text-2xl">
-                        {getUserInitials(user)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full p-0"
-                    >
-                      <Camera className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <CardTitle className="text-xl">
-                    {user.firstName} {user.lastName}
-                  </CardTitle>
-                  <CardDescription className="flex items-center justify-center gap-2">
-                    @{user.username}
-                    {user.isEmailVerified && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Shield className="h-3 w-3 mr-1" />
-                        Verified
-                      </Badge>
-                    )}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                      <Mail className="h-4 w-4" />
-                      {user.email}
-                    </div>
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-                      <Calendar className="h-4 w-4" />
-                      Joined {formatDate(user.createdAt)}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Quick Stats */}
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle className="text-lg">Quick Stats</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Leaf className="h-4 w-4 text-green-600" />
-                        <span className="text-sm">Scans Performed</span>
-                      </div>
-                      <Badge variant="outline">0</Badge>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <TrendingUp className="h-4 w-4 text-blue-600" />
-                        <span className="text-sm">Recommendations</span>
-                      </div>
-                      <Badge variant="outline">0</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Profile Information */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Profile Information</CardTitle>
-                      <CardDescription>
-                        Update your personal information and account details
-                      </CardDescription>
-                    </div>
-                    {!isEditing ? (
-                      <Button onClick={handleEdit} variant="outline">
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </Button>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <div className="container mx-auto px-8 py-8">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <aside className="col-span-3 flex flex-col gap-0">
+            <Card className="p-0">
+              <CardContent className="flex flex-col items-center pt-8 pb-4">
+                <div className="relative mb-2">
+                  <Avatar className="h-20 w-20">
+                    {profileImage ? (
+                      <img src={profileImage} alt="Profile" className="rounded-full object-cover h-20 w-20" />
                     ) : (
-                      <div className="flex gap-2">
-                        <Button onClick={handleSave} size="sm">
-                          <Save className="h-4 w-4 mr-2" />
-                          Save
-                        </Button>
-                        <Button onClick={handleCancel} variant="outline" size="sm">
-                          Cancel
-                        </Button>
-                      </div>
+                      <AvatarFallback className="bg-green-100 text-green-700 text-2xl">DR</AvatarFallback>
                     )}
+                  </Avatar>
+                  <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow cursor-pointer border border-gray-200">
+                    <Camera className="h-5 w-5 text-gray-600" />
+                    <input id="profile-upload" type="file" accept="image/*" className="hidden" onChange={() => setShowSave(true)} />
+                  </label>
+                </div>
+                <div className="font-semibold text-lg">{profile.fullName}</div>
+                <div className="text-gray-500 text-sm">@{profile.username}</div>
+                <div className="text-gray-400 text-xs mt-1 flex items-center"><Mail className="h-3 w-3 mr-1" />{profile.email}</div>
+                <div className="text-gray-400 text-xs mt-1">Joined {formatDate(user.createdAt)}</div>
+              </CardContent>
+            </Card>
+            <div className="bg-white rounded-lg shadow-sm p-4 mb-8">
+              <div className="font-semibold text-gray-700 mb-2 ml-2">Accounts</div>
+              <div className="flex flex-col gap-1">
+                <button
+                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'settings' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
+                  onClick={() => setActivePanel('settings')}
+                >
+                  <Home className="h-4 w-4 mr-2" />Settings
+                </button>
+                <button
+                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'scanned' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
+                  onClick={() => setActivePanel('scanned')}
+                >
+                  <span className="mr-2">🌱</span>Crops Scanned
+                </button>
+                <button
+                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'recommended' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
+                  onClick={() => setActivePanel('recommended')}
+                >
+                  <span className="mr-2">📋</span>Crops Recommended
+                </button>
+              </div>
+            </div>
+            <div className="mt-0">
+              <div className="font-semibold text-gray-700 mb-2 ml-2">Quick Stats</div>
+              <div className="bg-white rounded-lg p-4 flex flex-col gap-2 shadow-sm">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1 text-green-700">🌱 Scans Performed</span>
+                  <span className="font-bold">{mockStats.scanned}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="flex items-center gap-1 text-blue-700">📋 Recommendations</span>
+                  <span className="font-bold">{mockStats.recommended}</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          {/* Main Content */}
+          <main className="col-span-9 flex flex-col gap-8">
+            {/* Profile Information Card */}
+            <Card>
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Profile Information</CardTitle>
+                    <CardDescription>Update your personal information and account details</CardDescription>
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="firstName">First Name</Label>
-                      {isEditing ? (
-                        <Input
-                          id="firstName"
-                          value={editForm.firstName}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, firstName: e.target.value }))}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span>{user.firstName}</span>
-                        </div>
-                      )}
+                  {isEditing ? (
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
+                      {showSave && <Button>Save</Button>}
                     </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="lastName">Last Name</Label>
-                      {isEditing ? (
-                        <Input
-                          id="lastName"
-                          value={editForm.lastName}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, lastName: e.target.value }))}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span>{user.lastName}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      {isEditing ? (
-                        <Input
-                          id="username"
-                          value={editForm.username}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, username: e.target.value }))}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                          <User className="h-4 w-4 text-gray-400" />
-                          <span>@{user.username}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      {isEditing ? (
-                        <Input
-                          id="email"
-                          type="email"
-                          value={editForm.email}
-                          onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
-                        />
-                      ) : (
-                        <div className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800 rounded-md">
-                          <Mail className="h-4 w-4 text-gray-400" />
-                          <span>{user.email}</span>
-                          {user.isEmailVerified && (
-                            <Badge variant="secondary" className="text-xs ml-auto">
-                              Verified
-                            </Badge>
-                          )}
-                        </div>
-                      )}
+                  ) : (
+                    <Button variant="outline" size="sm" onClick={() => setIsEditing((v) => !v)}>Edit</Button>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="fullName">Full Name</Label>
+                    <Input id="fullName" value={profile.fullName} disabled={!isEditing} onChange={e => { setProfile(p => ({ ...p, fullName: e.target.value })); setShowSave(true); }} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number</Label>
+                    <div className="flex gap-2">
+                      <select
+                        disabled={!isEditing}
+                        className="border rounded px-2 py-1 text-sm bg-white"
+                        value={profile.countryCode || '+91'}
+                        onChange={e => { setProfile(p => ({ ...p, countryCode: e.target.value })); setShowSave(true); }}
+                      >
+                        {countryCodes.map((c) => (
+                          <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
+                        ))}
+                      </select>
+                      <Input
+                        id="phone"
+                        value={profile.phone}
+                        disabled={!isEditing}
+                        onChange={e => { setProfile(p => ({ ...p, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })); setShowSave(true); }}
+                        className="flex-1"
+                        placeholder="1234567890"
+                      />
                     </div>
                   </div>
-                </CardContent>
-              </Card>
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <select id="city" disabled={!isEditing} className="border rounded px-2 py-1 text-sm w-full bg-white" value={profile.city} onChange={e => { setProfile(p => ({ ...p, city: e.target.value })); setShowSave(true); }}>
+                      <option value="">Select City</option>
+                      <option value="Kolkata">Kolkata</option>
+                      <option value="Delhi">Delhi</option>
+                      <option value="Mumbai">Mumbai</option>
+                      <option value="Bangalore">Bangalore</option>
+                      {/* Add more cities as needed */}
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" value={profile.username} disabled={!isEditing} onChange={e => { setProfile(p => ({ ...p, username: e.target.value })); setShowSave(true); }} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input id="email" value={profile.email} disabled={!isEditing} onChange={e => { setProfile(p => ({ ...p, email: e.target.value })); setShowSave(true); }} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Account Settings */}
-              <Card className="mt-6">
+            {/* Dynamic Content Area */}
+            {activePanel === 'settings' && (
+              <Card>
                 <CardHeader>
                   <CardTitle>Account Settings</CardTitle>
-                  <CardDescription>
-                    Manage your account preferences and security settings
-                  </CardDescription>
+                  <CardDescription>Manage your account preferences and security settings</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <h4 className="font-medium">Change Password</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Update your password to keep your account secure
-                        </p>
+                        <p className="text-sm text-gray-600">Update your password to keep your account secure</p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Change
-                      </Button>
+                      <Button variant="outline" size="sm">Change</Button>
                     </div>
-
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">Two-Factor Authentication</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Add an extra layer of security to your account
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm">
-                        Enable
-                      </Button>
-                    </div>
-
                     <div className="flex items-center justify-between p-4 border rounded-lg">
                       <div>
                         <h4 className="font-medium">Download Data</h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          Download a copy of your account data
-                        </p>
+                        <p className="text-sm text-gray-600">Download a copy of your account data</p>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Download
-                      </Button>
+                      <Button variant="outline" size="sm">Download</Button>
                     </div>
-
-                    <Separator />
-
-                    <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50 dark:bg-red-950 dark:border-red-800">
+                    <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
                       <div>
-                        <h4 className="font-medium text-red-900 dark:text-red-100">Delete Account</h4>
-                        <p className="text-sm text-red-600 dark:text-red-300">
-                          Permanently delete your account and all data
-                        </p>
+                        <h4 className="font-medium text-red-900">Delete Account</h4>
+                        <p className="text-sm text-red-600">Permanently delete your account and all data</p>
                       </div>
-                      <Button variant="destructive" size="sm">
-                        Delete
-                      </Button>
+                      <Button variant="destructive" size="sm">Delete</Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-            </div>
-          </div>
+            )}
+            {activePanel === 'scanned' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Crops / Plants Scanned So far</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-6">
+                    {mockScanned.map((scan, idx) => (
+                      <div key={idx} className="flex items-center gap-6 bg-gray-50 rounded-lg p-4">
+                        <div className="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
+                          <span className="text-4xl">🖼️</span>
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-semibold text-lg mb-1">{scan.disease}</div>
+                          <div className="flex gap-4 text-sm mb-1">
+                            <span>Confidence <span className="font-bold ml-1">{scan.confidence}</span></span>
+                            <span>Severity <span className="font-bold ml-1">{scan.severity}</span></span>
+                          </div>
+                          <div className="flex gap-4">
+                            <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Treatment</span>
+                            <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Prevention Tips:</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+            {activePanel === 'recommended' && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Crops / Plants Recommended</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col gap-6">
+                    {mockRecommended.map((rec, idx) => (
+                      <div key={idx} className="border-l-4 border-green-500 bg-white rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="font-semibold capitalize text-lg">{rec.crop}</div>
+                          <div className="text-right">
+                            <span className="text-xs text-gray-500">Expected Yield</span>
+                            <div className="font-bold">{rec.yield}</div>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mb-2">
+                          <span className="bg-gray-100 px-2 py-1 rounded text-xs">{rec.suitability} Suitable</span>
+                          <span className={`px-2 py-1 rounded text-xs ${rec.profit === 'High Profit' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{rec.profit}</span>
+                          <span className="bg-gray-100 px-2 py-1 rounded text-xs">{rec.season}</span>
+                        </div>
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {rec.why.map((reason, i) => (
+                            <span key={i} className="bg-gray-100 px-2 py-1 rounded text-xs">{reason}</span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </main>
         </div>
-      </main>
+      </div>
     </div>
   )
 }

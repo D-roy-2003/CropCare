@@ -9,6 +9,8 @@ export async function GET(req: NextRequest) {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const profile = await Profile.findOne({ userId: user._id })
+      .populate('cropsScanned')
+      .populate('cropsRecommended')
     return NextResponse.json({ profile })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
@@ -21,7 +23,7 @@ export async function POST(req: NextRequest) {
     const user = await getAuthUser(req)
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     const body = await req.json()
-    const { fullName, phone, countryCode, city, email, username, profileImage } = body
+    const { fullName, phone, countryCode, city, email, username, profileImage, cropsScanned, cropsRecommended } = body
     let profile = await Profile.findOne({ userId: user._id })
     if (profile) {
       profile.fullName = fullName
@@ -31,6 +33,8 @@ export async function POST(req: NextRequest) {
       profile.email = email
       profile.username = username
       if (profileImage) profile.profileImage = profileImage
+      if (cropsScanned) profile.cropsScanned = cropsScanned
+      if (cropsRecommended) profile.cropsRecommended = cropsRecommended
       await profile.save()
     } else {
       profile = await Profile.create({
@@ -41,7 +45,9 @@ export async function POST(req: NextRequest) {
         city,
         email,
         username,
-        profileImage
+        profileImage,
+        cropsScanned: cropsScanned || [],
+        cropsRecommended: cropsRecommended || []
       })
     }
     return NextResponse.json({ success: true, profile })

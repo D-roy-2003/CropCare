@@ -9,6 +9,8 @@ export interface IProfile extends Document {
   email: string;
   username: string;
   profileImage?: string;
+  cropsScanned: mongoose.Types.ObjectId[];
+  cropsRecommended: mongoose.Types.ObjectId[];
   createdAt: Date;
 }
 
@@ -21,6 +23,8 @@ const ProfileSchema = new Schema<IProfile>({
   email: { type: String, required: true },
   username: { type: String, required: true },
   profileImage: { type: String },
+  cropsScanned: [{ type: Schema.Types.ObjectId, ref: 'DiseasePrediction' }],
+  cropsRecommended: [{ type: Schema.Types.ObjectId, ref: 'CropRecommendation' }],
   createdAt: { type: Date, default: Date.now }
 })
 
