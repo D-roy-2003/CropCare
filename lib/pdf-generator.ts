@@ -95,7 +95,7 @@ export async function generateDiseasePDF(
     pdf.setTextColor(0, 0, 0)
     pdf.setFontSize(18)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('🔬 Disease Overview', margin, yPosition)
+    pdf.text('Disease Overview', margin, yPosition)
     yPosition += 15
 
     // Disease name and badges
@@ -164,7 +164,7 @@ export async function generateDiseasePDF(
     pdf.setTextColor(0, 0, 0)
     pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('📚 Disease Information', margin, yPosition)
+    pdf.text('Disease Information', margin, yPosition)
     yPosition += 15
 
     const diseaseInfoItems = [
@@ -193,10 +193,10 @@ export async function generateDiseasePDF(
     checkPageBreak(30)
     pdf.setFontSize(14)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('🍃 Symptoms', margin, yPosition)
+    pdf.text('Symptoms', margin, yPosition)
     yPosition += 10
 
-    pdf.setFillColor(249, 250, 251) // gray-50
+    pdf.setFillColor(249, 250, 251) // light gray background
     pdf.rect(margin, yPosition, contentWidth, 20, 'F')
     pdf.setTextColor(75, 85, 99) // gray-600
     pdf.setFontSize(10)
@@ -212,10 +212,10 @@ export async function generateDiseasePDF(
     pdf.setTextColor(0, 0, 0)
     pdf.setFontSize(14)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('☀️ Favorable Conditions', margin, yPosition)
+    pdf.text('Favorable Conditions', margin, yPosition)
     yPosition += 10
 
-    pdf.setFillColor(249, 250, 251) // gray-50
+    pdf.setFillColor(249, 250, 251) // light gray background
     pdf.rect(margin, yPosition, contentWidth, 20, 'F')
     pdf.setTextColor(75, 85, 99) // gray-600
     pdf.setFontSize(10)
@@ -231,14 +231,14 @@ export async function generateDiseasePDF(
     pdf.setTextColor(0, 0, 0)
     pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('✅ Detailed Treatment Recommendations', margin, yPosition)
+    pdf.text('Detailed Treatment Recommendations', margin, yPosition)
     yPosition += 15
 
     detailedTreatment.forEach((treatment, index) => {
       const requiredHeight = Math.ceil(treatment.length / 80) * 6 + 15
       checkPageBreak(requiredHeight)
 
-      // Green background for treatment item
+      // Light green background for treatment item
       pdf.setFillColor(240, 253, 244) // green-50
       const itemHeight = Math.max(12, Math.ceil(treatment.length / 80) * 4 + 8)
       pdf.rect(margin, yPosition, contentWidth, itemHeight, 'F')
@@ -268,14 +268,14 @@ export async function generateDiseasePDF(
     pdf.setTextColor(0, 0, 0)
     pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('🛡️ Comprehensive Prevention Strategies', margin, yPosition)
+    pdf.text('Comprehensive Prevention Strategies', margin, yPosition)
     yPosition += 15
 
     detailedPrevention.forEach((prevention, index) => {
       const requiredHeight = Math.ceil(prevention.length / 80) * 6 + 15
       checkPageBreak(requiredHeight)
 
-      // Blue background for prevention item
+      // Light blue background for prevention item
       pdf.setFillColor(239, 246, 255) // blue-50
       const itemHeight = Math.max(12, Math.ceil(prevention.length / 80) * 4 + 8)
       pdf.rect(margin, yPosition, contentWidth, itemHeight, 'F')
@@ -299,19 +299,19 @@ export async function generateDiseasePDF(
     })
 
     // Environmental Monitoring Section
-    checkPageBreak(60)
+    checkPageBreak(80)
     yPosition += 15
     pdf.setTextColor(0, 0, 0)
     pdf.setFontSize(16)
     pdf.setFont('helvetica', 'bold')
-    pdf.text('🌡️ Environmental Monitoring Guidelines', margin, yPosition)
+    pdf.text('Environmental Monitoring Guidelines', margin, yPosition)
     yPosition += 15
 
     const monitoringItems = [
-      { icon: '🌡️', title: 'Temperature', desc: 'Monitor daily temperature fluctuations', color: [251, 146, 60] },
-      { icon: '💧', title: 'Humidity', desc: 'Track relative humidity levels', color: [59, 130, 246] },
-      { icon: '📅', title: 'Seasonal Patterns', desc: 'Track disease occurrence patterns', color: [34, 197, 94] },
-      { icon: '⚠️', title: 'Early Warning', desc: 'Set up monitoring alerts', color: [168, 85, 247] }
+      { title: 'Temperature', desc: 'Monitor daily temperature fluctuations', color: [255, 237, 213] }, // orange-100
+      { title: 'Humidity', desc: 'Track relative humidity levels', color: [219, 234, 254] }, // blue-100
+      { title: 'Seasonal Patterns', desc: 'Track disease occurrence patterns', color: [220, 252, 231] }, // green-100
+      { title: 'Early Warning', desc: 'Set up monitoring alerts', color: [237, 233, 254] } // purple-100
     ]
 
     monitoringItems.forEach((item, index) => {
@@ -320,19 +320,19 @@ export async function generateDiseasePDF(
 
       checkPageBreak(25)
 
-      // Background
-      pdf.setFillColor(item.color[0], item.color[1], item.color[2], 0.1)
+      // Light background with good contrast
+      pdf.setFillColor(item.color[0], item.color[1], item.color[2])
       pdf.rect(x, y, contentWidth / 2 - 5, 20, 'F')
 
-      // Icon and text
-      pdf.setTextColor(0, 0, 0)
+      // Title and description with dark text for good readability
+      pdf.setTextColor(0, 0, 0) // black text
       pdf.setFontSize(12)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(`${item.icon} ${item.title}`, x + 3, y + 8)
+      pdf.text(item.title, x + 3, y + 8)
       
       pdf.setFontSize(9)
       pdf.setFont('helvetica', 'normal')
-      pdf.setTextColor(75, 85, 99)
+      pdf.setTextColor(75, 85, 99) // gray-600
       pdf.text(item.desc, x + 3, y + 15)
     })
 
@@ -350,7 +350,7 @@ export async function generateDiseasePDF(
     
     pdf.setFontSize(10)
     pdf.setFont('helvetica', 'normal')
-    pdf.text('🌾 Empowering farmers with AI-powered agricultural solutions', pageWidth / 2, pageHeight - 8, { align: 'center' })
+    pdf.text('Empowering farmers with AI-powered agricultural solutions', pageWidth / 2, pageHeight - 8, { align: 'center' })
 
     // Save the PDF
     const fileName = `disease-report-${diseaseData.disease.replace(/\s+/g, '-').toLowerCase()}-${Date.now()}.pdf`
