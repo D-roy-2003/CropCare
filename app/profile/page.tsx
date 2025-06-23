@@ -55,7 +55,7 @@ const countryCodes = [
 export default function ProfilePage() {
   const [activePanel, setActivePanel] = useState<'settings' | 'scanned' | 'recommended'>('settings');
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<{ fullName: string; phone: string; countryCode: string; city: string; username: string; email: string; profileImage: string; } | null>(null);
+  const [profile, setProfile] = useState<{ fullName: string; phone: string; countryCode: string; city: string; username: string; email: string; profileImage: string; cropsRecommended: any[]; } | null>(null);
   const [profileImage, setProfileImage] = useState('');
   const [showSave, setShowSave] = useState(false);
   const [user, setUser] = useState<UserData | null>(null)
@@ -108,6 +108,7 @@ export default function ProfilePage() {
             username: data.profile.username || '',
             email: data.profile.email || '',
             profileImage: data.profile.profileImage || '',
+            cropsRecommended: data.profile.cropsRecommended || [],
           });
           setProfileImage(data.profile.profileImage || '');
           setCropsScanned(data.profile.cropsScanned || []);
@@ -242,6 +243,7 @@ export default function ProfilePage() {
           username: updated.profile.username || '',
           email: updated.profile.email || '',
           profileImage: updated.profile.profileImage || '',
+          cropsRecommended: updated.profile.cropsRecommended || [],
         });
         setProfileImage(updated.profile.profileImage || '');
         setSaveMessage('Profile Updated Successfully');
@@ -345,11 +347,11 @@ export default function ProfilePage() {
               <div className="bg-white dark:bg-[#18181b] rounded-lg p-4 flex flex-col gap-2 shadow-sm border dark:border-[#23272f]">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1 text-green-700">🌱 Scans Performed</span>
-                  <span className="font-bold">0</span>
+                  <span className="font-bold">{Array.isArray(cropsScanned) ? cropsScanned.length : 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1 text-blue-700">📋 Recommendations</span>
-                  <span className="font-bold">0</span>
+                  <span className="font-bold">{Array.isArray(profile?.cropsRecommended) ? profile.cropsRecommended.length : 0}</span>
                 </div>
               </div>
             </div>
@@ -490,8 +492,12 @@ export default function ProfilePage() {
                               <span>Severity <span className="font-bold ml-1">{scan.severity}</span></span>
                             </div>
                             <div className="flex gap-4">
-                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Treatment</span>
-                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Prevention Tips:</span>
+                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
+                                @ Treatment: {scan.treatment ? scan.treatment : 'N/A'}
+                              </span>
+                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
+                                @ Prevention Tips: {scan.prevention ? scan.prevention : 'N/A'}
+                              </span>
                             </div>
                           </div>
                         </div>
@@ -508,7 +514,30 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-6">
-                    <div className="text-gray-400 text-center">No data yet</div>
+                    {Array.isArray(profile?.cropsRecommended) && profile.cropsRecommended.length > 0 ? (
+                      profile.cropsRecommended.map((rec, idx) => (
+                        <div key={idx} className="flex flex-col md:flex-row gap-6 bg-gray-50 rounded-lg p-4">
+                          <div className="flex-1">
+                            <div className="font-semibold text-lg mb-1">{rec.crop}</div>
+                            <div className="flex gap-4 text-sm mb-1">
+                              <span>Suitability <span className="font-bold ml-1">{rec.suitability}</span></span>
+                              <span>Profit <span className="font-bold ml-1">{rec.profit}</span></span>
+                              <span>Expected Yield <span className="font-bold ml-1">{rec.expected_yield}</span></span>
+                            </div>
+                            <div className="flex gap-4 text-sm mb-1">
+                              <span>Best Season <span className="font-bold ml-1">{rec.best_season}</span></span>
+                            </div>
+                            <div className="flex flex-col gap-2 mt-2">
+                              <span className="bg-blue-100 px-2 py-1 rounded text-blue-700 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
+                                Why Recommended: {Array.isArray(rec.why_recommended) ? rec.why_recommended.join(', ') : (rec.why_recommended || 'N/A')}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-400 text-center">No data yet</div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

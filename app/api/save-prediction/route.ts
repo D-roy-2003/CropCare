@@ -25,6 +25,11 @@ export async function POST(req: NextRequest) {
       prevention,
       imageUrl
     })
+    // Add the prediction to the user's cropsScanned array
+    await (await import('@/models/User')).default.findByIdAndUpdate(
+      user._id,
+      { $push: { cropsScanned: prediction._id } }
+    )
     return NextResponse.json({ success: true, prediction })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })

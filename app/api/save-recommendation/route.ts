@@ -24,6 +24,11 @@ export async function POST(req: NextRequest) {
       best_season,
       why_recommended
     })
+    // Add the recommendation to the user's cropsRecommended array
+    await (await import('@/models/User')).default.findByIdAndUpdate(
+      user._id,
+      { $push: { cropsRecommended: recommendation._id } }
+    )
     return NextResponse.json({ success: true, recommendation })
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 })
