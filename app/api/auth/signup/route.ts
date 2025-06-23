@@ -3,8 +3,7 @@ import { signupSchema } from '@/lib/validation'
 import { rateLimit } from '@/lib/rate-limit'
 import connectDB from '@/lib/mongodb'
 import User from '@/models/User'
-import { sendVerificationEmail } from '@/lib/email'
-import crypto from 'crypto'
+import { createSession } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,10 +54,6 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    // Generate email verification token
-    const emailVerificationToken = crypto.randomBytes(32).toString('hex')
-    const emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
-    
     // Create user
     const user = new User({
       firstName: validatedData.firstName,
@@ -66,22 +61,14 @@ export async function POST(request: NextRequest) {
       username: validatedData.username,
       email: validatedData.email,
       password: validatedData.password,
-      emailVerificationToken,
-      emailVerificationExpires
+      isEmailVerified: true // Automatically verify user
     })
     
     await user.save()
     
-    // Send verification email
-    try {
-      await sendVerificationEmail(user.email, emailVerificationToken)
-    } catch (emailError) {
-      console.error('Failed to send verification email:', emailError)
-      // Don't fail the signup if email fails
-    }
-    
-    return NextResponse.json({
-      message: 'Account created successfully! Please check your email to verify your account.',
+    // Create session and set cookie
+    const response = NextResponse.json({
+      message: 'Account created successfully!',
       user: {
         id: user._id,
         firstName: user.firstName,
@@ -91,6 +78,10 @@ export async function POST(request: NextRequest) {
         isEmailVerified: user.isEmailVerified
       }
     }, { status: 201 })
+    
+    await createSession(response, user._id.toString())
+
+    return response
     
   } catch (error: any) {
     console.error('Signup error:', error)

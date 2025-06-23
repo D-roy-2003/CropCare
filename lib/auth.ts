@@ -58,6 +58,20 @@ export async function getAuthUser(request: NextRequest): Promise<any | null> {
   }
 }
 
+export async function createSession(response: any, userId: string) {
+  const user = await (await import('@/models/User')).default.findById(userId);
+  if (user) {
+    const { token } = createAuthResponse(user);
+    response.cookies.set('auth-token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60, // 7 days
+      path: '/',
+    });
+  }
+}
+
 export function createAuthResponse(user: any) {
   const token = generateToken({
     userId: user._id.toString(),

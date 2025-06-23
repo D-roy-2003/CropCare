@@ -215,6 +215,12 @@ export function Navbar() {
                             <p className="text-xs text-muted-foreground">{user.email}</p>
                           </div>
                         </div>
+                        <Button variant="ghost" asChild className="w-full justify-start mb-2">
+                          <Link href="/profile">
+                            <User className="h-4 w-4 mr-2" />
+                            Profile
+                          </Link>
+                        </Button>
                         <Button variant="outline" onClick={handleLogout} className="w-full">
                           <LogOut className="h-4 w-4 mr-2" />
                           Log out

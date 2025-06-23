@@ -27,7 +27,6 @@ import {
   Shield,
   Camera
 } from "lucide-react"
-import { Footer } from "@/components/footer"
 
 interface UserData {
   id: string
@@ -470,9 +469,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <Footer />
     </div>
   )
 }

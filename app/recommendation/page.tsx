@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Leaf, MapPin, Thermometer, Droplets, Loader2 } from "lucide-react"
+import { supabase } from '@/lib/supabase' // (if needed in future)
 
 export default function RecommendationPage() {
   const [formData, setFormData] = useState({
@@ -22,6 +23,8 @@ export default function RecommendationPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [recommendations, setRecommendations] = useState<any[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [saveStatus, setSaveStatus] = useState<{ [key: number]: 'success' | 'error' | null }>({})
+  const [saveMessage, setSaveMessage] = useState<{ [key: number]: string | null }>({})
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -57,6 +60,40 @@ export default function RecommendationPage() {
       setError(err.message)
     }
     setIsAnalyzing(false)
+  }
+
+  const isLoggedIn = () => {
+    return Boolean(localStorage.getItem('user'))
+  }
+
+  const handleSaveToProfile = async (rec: any, index: number) => {
+    setSaveStatus((prev) => ({ ...prev, [index]: null }))
+    setSaveMessage((prev) => ({ ...prev, [index]: null }))
+    if (!isLoggedIn()) {
+      setSaveStatus((prev) => ({ ...prev, [index]: 'error' }))
+      setSaveMessage((prev) => ({ ...prev, [index]: 'You have to login to save the info' }))
+      return
+    }
+    try {
+      const response = await fetch('/api/save-recommendation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          crop: rec.crop,
+          suitability: rec.suitability,
+          profit: rec.profit,
+          expected_yield: rec.expected_yield,
+          best_season: rec.best_season,
+          why_recommended: rec.why_recommended
+        })
+      })
+      if (!response.ok) throw new Error('Failed to save recommendation')
+      setSaveStatus((prev) => ({ ...prev, [index]: 'success' }))
+      setSaveMessage((prev) => ({ ...prev, [index]: 'Recommendation saved to your profile!' }))
+    } catch (err: any) {
+      setSaveStatus((prev) => ({ ...prev, [index]: 'error' }))
+      setSaveMessage((prev) => ({ ...prev, [index]: err.message || 'Error saving recommendation' }))
+    }
   }
 
   return (
@@ -180,6 +217,26 @@ export default function RecommendationPage() {
                             <div>
                               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Best Season:</p>
                               <Badge variant="outline">{rec.best_season}</Badge>
+                              <div className="flex items-center mt-2">
+                                <Button
+                                  className="text-xs px-4 py-1 rounded-md h-7"
+                                  size="sm"
+                                  onClick={() => handleSaveToProfile(rec, index)}
+                                >
+                                  SAVE TO PROFILE
+                                </Button>
+                              </div>
+                              {saveMessage[index] && (
+                                <div
+                                  className={
+                                    saveStatus[index] === 'success'
+                                      ? 'mt-2 text-xs text-left text-green-700 bg-green-100 border border-green-200 rounded px-3 py-1'
+                                      : 'mt-2 text-xs text-left text-red-600 bg-red-100 border border-red-200 rounded px-3 py-1'
+                                  }
+                                >
+                                  {saveMessage[index]}
+                                </div>
+                              )}
                             </div>
                             <div>
                               <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

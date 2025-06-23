@@ -10,12 +10,15 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Upload, Camera, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import Image from "next/image"
+import { supabase } from '@/lib/supabase'
 
 export default function DiseasePredictionPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [result, setResult] = useState<any>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveMessage, setSaveMessage] = useState<string | null>(null)
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -75,6 +78,45 @@ export default function DiseasePredictionPage() {
     }
   }
 
+  const isLoggedIn = () => {
+    return Boolean(localStorage.getItem('user'))
+  }
+
+  const handleSaveToProfile = async () => {
+    setSaveMessage(null)
+    if (!isLoggedIn()) {
+      setSaveMessage('You have to login to save the info')
+      return
+    }
+    if (!selectedFile || !result) return
+    setIsSaving(true)
+    try {
+      const fileExt = selectedFile.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
+      const { data: uploadData, error: uploadError } = await supabase.storage.from('cropcare').upload(fileName, selectedFile)
+      if (uploadError) throw uploadError
+      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cropcare/${fileName}`
+      const response = await fetch('/api/save-prediction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          disease: result.disease,
+          confidence: result.confidence,
+          severity: result.severity,
+          treatment: result.treatment,
+          prevention: result.prevention,
+          imageUrl
+        })
+      })
+      if (!response.ok) throw new Error('Failed to save prediction')
+      setSaveMessage('Prediction saved to your profile!')
+    } catch (err: any) {
+      setSaveMessage(err.message || 'Error saving prediction')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <div className="container px-4 py-8">
       <div className="max-w-4xl mx-auto">
@@ -106,7 +148,12 @@ export default function DiseasePredictionPage() {
                       height={200}
                       className="mx-auto rounded-lg object-cover"
                     />
-                    <Button onClick={() => setSelectedImage(null)} variant="outline" size="sm">
+                    <Button onClick={() => {
+                      setSelectedImage(null)
+                      setResult(null)
+                      setSaveMessage(null)
+                      setIsSaving(false)
+                    }} variant="outline" size="sm">
                       Remove Image
                     </Button>
                   </div>
@@ -202,6 +249,25 @@ export default function DiseasePredictionPage() {
                       {result.prevention}
                     </p>
                   </div>
+                  <div className="flex gap-4 mt-4">
+                    <Button variant="secondary" className="flex-1" onClick={() => {/* TODO: Navigate to details page */}}>
+                      View Details
+                    </Button>
+                    <Button variant="default" className="flex-1" onClick={handleSaveToProfile} disabled={isSaving}>
+                      {isSaving ? 'Saving...' : 'Save to Profile'}
+                    </Button>
+                  </div>
+                  {saveMessage && (
+                    <div
+                      className={
+                        saveMessage === 'Prediction saved to your profile!'
+                          ? 'mt-2 text-sm text-center text-green-600 bg-green-100 border border-green-300 rounded shadow-sm px-4 py-2'
+                          : 'mt-2 text-sm text-center text-red-500 bg-red-100 border border-red-300 rounded shadow-sm px-4 py-2'
+                      }
+                    >
+                      {saveMessage}
+                    </div>
+                  )}
                 </div>
               )}
             </CardContent>
