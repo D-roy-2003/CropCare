@@ -4,9 +4,9 @@ import ShareableReport from '@/models/ShareableReport'
 
 export async function POST(request: NextRequest) {
   try {
-    // Set a timeout for the entire operation
+    // Set a timeout for the entire operation - increased from 8 to 15 seconds
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timeout')), 8000) // 8 second timeout
+      setTimeout(() => reject(new Error('Request timeout')), 15000) // 15 second timeout
     })
 
     const operationPromise = async () => {

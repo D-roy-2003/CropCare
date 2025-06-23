@@ -82,7 +82,8 @@ export default function DiseaseDetailsPage() {
 
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      // Increased timeout from 10 to 20 seconds to match server timeout
+      const timeoutId = setTimeout(() => controller.abort(), 20000) // 20 second timeout
 
       const response = await fetch('/api/share', {
         method: 'POST',
@@ -327,11 +328,43 @@ ${isHealthy ?
   const handleCopyLink = async () => {
     try {
       const url = await createShareableLink()
-      await navigator.clipboard.writeText(url || window.location.href)
-      setCopySuccess(true)
-      setTimeout(() => setCopySuccess(false), 2000)
+      const textToCopy = url || window.location.href
+      
+      // Try to copy to clipboard with improved error handling
+      if (navigator.clipboard && window.isSecureContext) {
+        // Focus the document first to ensure clipboard access
+        window.focus()
+        await navigator.clipboard.writeText(textToCopy)
+        setCopySuccess(true)
+        setTimeout(() => setCopySuccess(false), 2000)
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea')
+        textArea.value = textToCopy
+        textArea.style.position = 'fixed'
+        textArea.style.left = '-999999px'
+        textArea.style.top = '-999999px'
+        document.body.appendChild(textArea)
+        textArea.focus()
+        textArea.select()
+        
+        try {
+          document.execCommand('copy')
+          setCopySuccess(true)
+          setTimeout(() => setCopySuccess(false), 2000)
+        } catch (err) {
+          console.error('Fallback copy failed:', err)
+          // Show the URL to user as final fallback
+          alert(`Please copy this link manually: ${textToCopy}`)
+        } finally {
+          document.body.removeChild(textArea)
+        }
+      }
     } catch (error) {
       console.error('Failed to copy:', error)
+      // Show the URL to user as final fallback
+      const url = await createShareableLink()
+      alert(`Please copy this link manually: ${url || window.location.href}`)
     }
   }
 
