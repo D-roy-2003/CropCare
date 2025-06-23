@@ -21,10 +21,19 @@ import {
   BookOpen,
   Download,
   Share2,
-  Loader2
+  Loader2,
+  Copy,
+  MessageCircle,
+  Mail
 } from "lucide-react"
 import Image from "next/image"
 import { generateDiseasePDF } from "@/lib/pdf-generator"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface DiseaseDetails {
   disease: string
@@ -41,6 +50,7 @@ export default function DiseaseDetailsPage() {
   const [diseaseData, setDiseaseData] = useState<DiseaseDetails | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
+  const [copySuccess, setCopySuccess] = useState(false)
 
   useEffect(() => {
     // Get data from URL parameters
@@ -234,22 +244,74 @@ export default function DiseaseDetailsPage() {
     }
   }
 
-  const handleShare = async () => {
+  const createShareableContent = () => {
+    if (!diseaseData) return { title: '', text: '', url: '' }
+
+    const isHealthy = diseaseData.disease === 'Healthy'
+    const status = isHealthy ? '✅ Healthy Crop' : '⚠️ Disease Detected'
+    
+    const title = `🌾 Crop Analysis Report: ${diseaseData.disease}`
+    
+    const text = `${status}
+
+🔬 Disease: ${diseaseData.disease}
+📊 Confidence: ${diseaseData.confidence}%
+⚡ Severity: ${diseaseData.severity}
+
+${isHealthy ? 
+  '✅ Your crop appears healthy! Continue with current management practices.' : 
+  `🚨 Treatment needed: ${diseaseData.treatment.substring(0, 100)}...`
+}
+
+📱 Analyzed with Crop Care AI - Advanced disease detection for farmers
+
+🔗 View full report:`
+
+    return { title, text, url: window.location.href }
+  }
+
+  const handleNativeShare = async () => {
+    const { title, text, url } = createShareableContent()
+    
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: `Disease Analysis: ${diseaseData?.disease}`,
-          text: `Crop disease analysis results with ${diseaseData?.confidence}% confidence`,
-          url: window.location.href
-        })
+        await navigator.share({ title, text, url })
       } catch (error) {
         console.log('Error sharing:', error)
       }
     } else {
       // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href)
-      alert('Link copied to clipboard!')
+      await handleCopyLink()
     }
+  }
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
+    } catch (error) {
+      console.error('Failed to copy:', error)
+    }
+  }
+
+  const handleWhatsAppShare = () => {
+    const { text, url } = createShareableContent()
+    const whatsappText = encodeURIComponent(`${text}\n\n${url}`)
+    window.open(`https://wa.me/?text=${whatsappText}`, '_blank')
+  }
+
+  const handleEmailShare = () => {
+    const { title, text, url } = createShareableContent()
+    const subject = encodeURIComponent(title)
+    const body = encodeURIComponent(`${text}\n\n${url}`)
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_blank')
+  }
+
+  const handleSMSShare = () => {
+    const { text, url } = createShareableContent()
+    const smsText = encodeURIComponent(`${text}\n\n${url}`)
+    window.open(`sms:?body=${smsText}`, '_blank')
   }
 
   if (isLoading) {
@@ -302,10 +364,36 @@ export default function DiseaseDetailsPage() {
             Back to Results
           </Button>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={handleShare}>
-              <Share2 className="h-4 w-4 mr-2" />
-              Share
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={handleNativeShare}>
+                  <Share2 className="h-4 w-4 mr-2" />
+                  Share via System
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleCopyLink}>
+                  <Copy className="h-4 w-4 mr-2" />
+                  {copySuccess ? 'Copied!' : 'Copy Link'}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleWhatsAppShare}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Share on WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEmailShare}>
+                  <Mail className="h-4 w-4 mr-2" />
+                  Share via Email
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSMSShare}>
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Share via SMS
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button 
               variant="outline" 
               onClick={handleDownloadReport}
