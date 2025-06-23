@@ -18,6 +18,13 @@ export interface IUser extends Document {
   updatedAt: Date
   comparePassword(candidatePassword: string): Promise<boolean>
   isLocked: boolean
+  // Profile fields
+  profileImage?: string
+  phone?: string
+  countryCode?: string
+  city?: string
+  cropsScanned?: mongoose.Types.ObjectId[]
+  cropsRecommended?: mongoose.Types.ObjectId[]
 }
 
 const UserSchema = new Schema<IUser>({
@@ -69,7 +76,14 @@ const UserSchema = new Schema<IUser>({
     type: Number,
     default: 0
   },
-  lockUntil: Date
+  lockUntil: Date,
+  // Profile fields
+  profileImage: { type: String },
+  phone: { type: String },
+  countryCode: { type: String },
+  city: { type: String },
+  cropsScanned: [{ type: Schema.Types.ObjectId, ref: 'DiseasePrediction' }],
+  cropsRecommended: [{ type: Schema.Types.ObjectId, ref: 'CropRecommendation' }],
 }, {
   timestamps: true
 })

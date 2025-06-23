@@ -27,6 +27,7 @@ import {
   Shield,
   Camera
 } from "lucide-react"
+import { supabase } from '@/lib/supabase'
 
 interface UserData {
   id: string
@@ -37,26 +38,6 @@ interface UserData {
   isEmailVerified: boolean
   createdAt?: string
 }
-
-const mockProfile = {
-  fullName: 'Debangshu Roy',
-  phone: '9876543210',
-  countryCode: '+91',
-  city: 'Kolkata',
-  username: 'debu69',
-  email: 'test@email.com',
-  profileImage: '',
-};
-const mockStats = { scanned: 2, recommended: 0 };
-const mockScanned = [
-  { disease: 'Tomato Curl Virus', confidence: '94.87%', severity: 'Medium' },
-  { disease: 'Apple Cedar Rust', confidence: '94.87%', severity: 'Medium' },
-];
-const mockRecommended = [
-  { crop: 'jute', suitability: '4%', profit: 'Medium Profit', season: 'Kharif', yield: '2.0 tons/hectare', why: ['Sufficient rainfall', 'Adequate nitrogen levels'] },
-  { crop: 'maize', suitability: '70%', profit: 'High Profit', season: 'Kharif', yield: '6.0 tons/hectare', why: ['High N requirement met', 'Warm temperature suitable', 'Sufficient rainfall'] },
-  { crop: 'coffee', suitability: '63%', profit: 'High Profit', season: 'Annual', yield: '1.8 tons/hectare', why: ['High confidence prediction', 'Suitable temperature and humidity', 'Adaptable to soil pH'] },
-];
 
 const countryCodes = [
   { code: '+1', name: 'US', flag: '🇺🇸' },
@@ -74,7 +55,7 @@ const countryCodes = [
 export default function ProfilePage() {
   const [activePanel, setActivePanel] = useState<'settings' | 'scanned' | 'recommended'>('settings');
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<{ fullName: string; phone: string; countryCode: string; city: string; username: string; email: string; profileImage: string; }>(mockProfile);
+  const [profile, setProfile] = useState<{ fullName: string; phone: string; countryCode: string; city: string; username: string; email: string; profileImage: string; } | null>(null);
   const [profileImage, setProfileImage] = useState('');
   const [showSave, setShowSave] = useState(false);
   const [user, setUser] = useState<UserData | null>(null)
@@ -86,6 +67,9 @@ export default function ProfilePage() {
     email: ""
   })
   const router = useRouter()
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [cropsScanned, setCropsScanned] = useState<any[]>([]);
 
   useEffect(() => {
     // Get user data from localStorage
@@ -110,6 +94,26 @@ export default function ProfilePage() {
     } finally {
       setIsLoading(false)
     }
+    // Fetch profile on mount
+    fetch('/api/profile')
+      .then(res => res.json())
+      .then(data => {
+        console.log('Profile API response:', data); // Debug log
+        if (data.profile) {
+          setProfile({
+            fullName: data.profile.fullName || '',
+            phone: data.profile.phone || '',
+            countryCode: data.profile.countryCode || '+91',
+            city: data.profile.city || '',
+            username: data.profile.username || '',
+            email: data.profile.email || '',
+            profileImage: data.profile.profileImage || '',
+          });
+          setProfileImage(data.profile.profileImage || '');
+          setCropsScanned(data.profile.cropsScanned || []);
+        }
+      })
+      .catch(() => {});
   }, [router])
 
   const handleLogout = async () => {
@@ -166,9 +170,15 @@ export default function ProfilePage() {
     setIsEditing(false)
   }
 
-  const getUserInitials = (userData: UserData) => {
-    if (!userData.firstName || !userData.lastName) return "U"
-    return `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase()
+  const getUserInitials = (userData: UserData | null) => {
+    if (!userData) return "U";
+    if (userData.firstName && userData.lastName) {
+      return `${userData.firstName[0]}${userData.lastName[0]}`.toUpperCase();
+    }
+    if (userData.firstName) return userData.firstName[0].toUpperCase();
+    if (userData.username) return userData.username[0].toUpperCase();
+    if (userData.email) return userData.email[0].toUpperCase();
+    return "U";
   }
 
   const formatDate = (dateString?: string) => {
@@ -179,6 +189,68 @@ export default function ProfilePage() {
       day: 'numeric'
     })
   }
+
+  // Profile image upload handler
+  const handleProfileImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setProfileImage(URL.createObjectURL(file));
+      setShowSave(true);
+    }
+  };
+
+  // Save profile handler
+  const handleSaveProfile = async () => {
+    setSaveMessage(null);
+    let imageUrl = profileImage;
+    let fullName = profile?.fullName?.trim();
+    // If fullName is empty, recompute from user or fallback
+    if (!fullName) {
+      fullName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
+    }
+    try {
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `profile_${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('cropcare').upload(fileName, selectedFile);
+        if (uploadError) throw uploadError;
+        imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cropcare/${fileName}`;
+      }
+      const response = await fetch('/api/profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...profile,
+          fullName, // always send a valid fullName
+          profileImage: imageUrl,
+        })
+      });
+      if (!response.ok) throw new Error('Failed to update profile');
+      setSaveMessage('Profile Updated Successfully');
+      setShowSave(false);
+      setSelectedFile(null);
+      // Refetch profile to update fields
+      const updated = await response.json();
+      if (updated.profile) {
+        // Always use the correct fullName (from local state or recomputed)
+        setProfile({
+          fullName: fullName || [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim() || updated.profile.fullName || '',
+          phone: updated.profile.phone || '',
+          countryCode: updated.profile.countryCode || '+91',
+          city: updated.profile.city || '',
+          username: updated.profile.username || '',
+          email: updated.profile.email || '',
+          profileImage: updated.profile.profileImage || '',
+        });
+        setProfileImage(updated.profile.profileImage || '');
+        setSaveMessage('Profile Updated Successfully');
+        setIsEditing(false); // Exit editing mode after save
+      }
+    } catch (err: any) {
+      setSaveMessage(err.message || 'Error updating profile');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -216,34 +288,37 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-[#101014] flex flex-col">
       <div className="container mx-auto px-8 py-8">
         <div className="grid grid-cols-12 gap-6">
           {/* Sidebar */}
           <aside className="col-span-3 flex flex-col gap-0">
-            <Card className="p-0">
+            <Card className="p-0 bg-white dark:bg-[#18181b] border dark:border-[#23272f] shadow-md">
               <CardContent className="flex flex-col items-center pt-8 pb-4">
                 <div className="relative mb-2">
                   <Avatar className="h-20 w-20">
                     {profileImage ? (
                       <img src={profileImage} alt="Profile" className="rounded-full object-cover h-20 w-20" />
                     ) : (
-                      <AvatarFallback className="bg-green-100 text-green-700 text-2xl">DR</AvatarFallback>
+                      <AvatarFallback className="bg-green-100 text-green-700 text-2xl">
+                        {getUserInitials(user)}
+                      </AvatarFallback>
                     )}
                   </Avatar>
-                  <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-white rounded-full p-1 shadow cursor-pointer border border-gray-200">
-                    <Camera className="h-5 w-5 text-gray-600" />
-                    <input id="profile-upload" type="file" accept="image/*" className="hidden" onChange={() => setShowSave(true)} />
+                  <label htmlFor="profile-upload" className="absolute bottom-0 right-0 bg-white dark:bg-[#23272f] rounded-full p-1 shadow cursor-pointer border border-gray-200 dark:border-[#23272f]">
+                    <Camera className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                    <input id="profile-upload" type="file" accept="image/*" className="hidden" onChange={handleProfileImageChange} />
                   </label>
                 </div>
-                <div className="font-semibold text-lg">{profile.fullName}</div>
-                <div className="text-gray-500 text-sm">@{profile.username}</div>
-                <div className="text-gray-400 text-xs mt-1 flex items-center"><Mail className="h-3 w-3 mr-1" />{profile.email}</div>
-                <div className="text-gray-400 text-xs mt-1">Joined {formatDate(user.createdAt)}</div>
+                <div className="font-semibold text-lg text-gray-900 dark:text-gray-100">{profile?.fullName}</div>
+                <div className="text-gray-500 dark:text-gray-400 text-sm">@{profile?.username}</div>
+                <div className="text-gray-400 dark:text-gray-500 text-xs mt-1 flex items-center"><Mail className="h-3 w-3 mr-1" />{profile?.email}</div>
+                <div className="text-gray-400 dark:text-gray-500 text-xs mt-1">Joined {formatDate(user.createdAt)}</div>
               </CardContent>
             </Card>
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-8">
-              <div className="font-semibold text-gray-700 mb-2 ml-2">Accounts</div>
+            <div className="h-6" />
+            <div className="bg-white dark:bg-[#18181b] rounded-lg shadow-sm p-4 mb-8 border dark:border-[#23272f]">
+              <div className="font-semibold text-gray-700 dark:text-gray-200 mb-2 ml-2">Accounts</div>
               <div className="flex flex-col gap-1">
                 <button
                   className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'settings' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
@@ -266,15 +341,15 @@ export default function ProfilePage() {
               </div>
             </div>
             <div className="mt-0">
-              <div className="font-semibold text-gray-700 mb-2 ml-2">Quick Stats</div>
-              <div className="bg-white rounded-lg p-4 flex flex-col gap-2 shadow-sm">
+              <div className="font-semibold text-gray-700 dark:text-gray-200 mb-2 ml-2">Quick Stats</div>
+              <div className="bg-white dark:bg-[#18181b] rounded-lg p-4 flex flex-col gap-2 shadow-sm border dark:border-[#23272f]">
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1 text-green-700">🌱 Scans Performed</span>
-                  <span className="font-bold">{mockStats.scanned}</span>
+                  <span className="font-bold">0</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="flex items-center gap-1 text-blue-700">📋 Recommendations</span>
-                  <span className="font-bold">{mockStats.recommended}</span>
+                  <span className="font-bold">0</span>
                 </div>
               </div>
             </div>
@@ -283,17 +358,17 @@ export default function ProfilePage() {
           {/* Main Content */}
           <main className="col-span-9 flex flex-col gap-8">
             {/* Profile Information Card */}
-            <Card>
+            <Card className="bg-white dark:bg-[#18181b] border dark:border-[#23272f] shadow-md">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle>Profile Information</CardTitle>
-                    <CardDescription>Update your personal information and account details</CardDescription>
+                    <CardTitle className="text-gray-900 dark:text-gray-100">Profile Information</CardTitle>
+                    <CardDescription className="text-gray-500 dark:text-gray-400">Update your personal information and account details</CardDescription>
                   </div>
                   {isEditing ? (
                     <div className="flex gap-2">
                       <Button variant="outline" onClick={() => setIsEditing(false)}>Cancel</Button>
-                      {showSave && <Button>Save</Button>}
+                      <Button onClick={handleSaveProfile}>Save</Button>
                     </div>
                   ) : (
                     <Button variant="outline" size="sm" onClick={() => setIsEditing((v) => !v)}>Edit</Button>
@@ -303,17 +378,18 @@ export default function ProfilePage() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name</Label>
-                    <Input id="fullName" value={profile.fullName} disabled={!isEditing} onChange={e => { setProfile(p => ({ ...p, fullName: e.target.value })); setShowSave(true); }} />
+                    <Label htmlFor="fullName" className="text-gray-900 dark:text-gray-100">Full Name</Label>
+                    <Input id="fullName" value={profile?.fullName} disabled={!isEditing} onChange={e => setProfile(p => p ? { ...p, fullName: e.target.value } : p)}
+                      className="bg-gray-50 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border dark:border-[#23272f] placeholder-gray-400 dark:placeholder-gray-500" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number</Label>
+                    <Label htmlFor="phone" className="text-gray-900 dark:text-gray-100">Phone Number</Label>
                     <div className="flex gap-2">
                       <select
                         disabled={!isEditing}
-                        className="border rounded px-2 py-1 text-sm bg-white"
-                        value={profile.countryCode || '+91'}
-                        onChange={e => { setProfile(p => ({ ...p, countryCode: e.target.value })); setShowSave(true); }}
+                        className="border rounded px-2 py-1 text-sm bg-white dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border dark:border-[#23272f]"
+                        value={profile?.countryCode || '+91'}
+                        onChange={e => setProfile(p => p ? { ...p, countryCode: e.target.value } : p)}
                       >
                         {countryCodes.map((c) => (
                           <option key={c.code} value={c.code}>{c.flag} {c.code}</option>
@@ -321,17 +397,17 @@ export default function ProfilePage() {
                       </select>
                       <Input
                         id="phone"
-                        value={profile.phone}
+                        value={profile?.phone}
                         disabled={!isEditing}
-                        onChange={e => { setProfile(p => ({ ...p, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) })); setShowSave(true); }}
-                        className="flex-1"
+                        onChange={e => setProfile(p => p ? { ...p, phone: e.target.value.replace(/[^0-9]/g, '').slice(0, 10) } : p)}
+                        className="flex-1 bg-gray-50 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border dark:border-[#23272f] placeholder-gray-400 dark:placeholder-gray-500"
                         placeholder="1234567890"
                       />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <select id="city" disabled={!isEditing} className="border rounded px-2 py-1 text-sm w-full bg-white" value={profile.city} onChange={e => { setProfile(p => ({ ...p, city: e.target.value })); setShowSave(true); }}>
+                    <Label htmlFor="city" className="text-gray-900 dark:text-gray-100">City</Label>
+                    <select id="city" disabled={!isEditing} className="border rounded px-2 py-1 text-sm w-full bg-white dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border dark:border-[#23272f]" value={profile?.city} onChange={e => setProfile(p => p ? { ...p, city: e.target.value } : p)}>
                       <option value="">Select City</option>
                       <option value="Kolkata">Kolkata</option>
                       <option value="Delhi">Delhi</option>
@@ -341,12 +417,14 @@ export default function ProfilePage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="username">Username</Label>
-                    <Input id="username" value={profile.username} disabled={!isEditing} onChange={e => { setProfile(p => ({ ...p, username: e.target.value })); setShowSave(true); }} />
+                    <Label htmlFor="username" className="text-gray-900 dark:text-gray-100">Username</Label>
+                    <Input id="username" value={profile?.username} disabled={!isEditing} onChange={e => setProfile(p => p ? { ...p, username: e.target.value } : p)}
+                      className="bg-gray-50 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border dark:border-[#23272f] placeholder-gray-400 dark:placeholder-gray-500" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" value={profile.email} disabled={!isEditing} onChange={e => { setProfile(p => ({ ...p, email: e.target.value })); setShowSave(true); }} />
+                    <Label htmlFor="email" className="text-gray-900 dark:text-gray-100">Email Address</Label>
+                    <Input id="email" value={profile?.email} disabled={!isEditing} onChange={e => setProfile(p => p ? { ...p, email: e.target.value } : p)}
+                      className="bg-gray-50 dark:bg-[#23272f] text-gray-900 dark:text-gray-100 border dark:border-[#23272f] placeholder-gray-400 dark:placeholder-gray-500" />
                   </div>
                 </div>
               </CardContent>
@@ -393,24 +471,32 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-6">
-                    {mockScanned.map((scan, idx) => (
-                      <div key={idx} className="flex items-center gap-6 bg-gray-50 rounded-lg p-4">
-                        <div className="w-24 h-24 bg-gray-200 rounded flex items-center justify-center">
-                          <span className="text-4xl">🖼️</span>
-                        </div>
-                        <div className="flex-1">
-                          <div className="font-semibold text-lg mb-1">{scan.disease}</div>
-                          <div className="flex gap-4 text-sm mb-1">
-                            <span>Confidence <span className="font-bold ml-1">{scan.confidence}</span></span>
-                            <span>Severity <span className="font-bold ml-1">{scan.severity}</span></span>
+                    {cropsScanned.length === 0 ? (
+                      <div className="text-gray-400 text-center">No data yet</div>
+                    ) : (
+                      cropsScanned.map((scan, idx) => (
+                        <div key={idx} className="flex items-center gap-6 bg-gray-50 rounded-lg p-4">
+                          <div className="w-24 h-24 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                            {scan.imageUrl ? (
+                              <img src={scan.imageUrl} alt="Crop" className="object-cover w-24 h-24" />
+                            ) : (
+                              <span className="text-4xl">🖼️</span>
+                            )}
                           </div>
-                          <div className="flex gap-4">
-                            <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Treatment</span>
-                            <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Prevention Tips:</span>
+                          <div className="flex-1">
+                            <div className="font-semibold text-lg mb-1">{scan.disease}</div>
+                            <div className="flex gap-4 text-sm mb-1">
+                              <span>Confidence <span className="font-bold ml-1">{scan.confidence}</span></span>
+                              <span>Severity <span className="font-bold ml-1">{scan.severity}</span></span>
+                            </div>
+                            <div className="flex gap-4">
+                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Treatment</span>
+                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs">@ Prevention Tips:</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -422,27 +508,7 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-col gap-6">
-                    {mockRecommended.map((rec, idx) => (
-                      <div key={idx} className="border-l-4 border-green-500 bg-white rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-semibold capitalize text-lg">{rec.crop}</div>
-                          <div className="text-right">
-                            <span className="text-xs text-gray-500">Expected Yield</span>
-                            <div className="font-bold">{rec.yield}</div>
-                          </div>
-                        </div>
-                        <div className="flex gap-2 mb-2">
-                          <span className="bg-gray-100 px-2 py-1 rounded text-xs">{rec.suitability} Suitable</span>
-                          <span className={`px-2 py-1 rounded text-xs ${rec.profit === 'High Profit' ? 'bg-green-100 text-green-700' : 'bg-gray-100'}`}>{rec.profit}</span>
-                          <span className="bg-gray-100 px-2 py-1 rounded text-xs">{rec.season}</span>
-                        </div>
-                        <div className="flex flex-wrap gap-1 mt-2">
-                          {rec.why.map((reason, i) => (
-                            <span key={i} className="bg-gray-100 px-2 py-1 rounded text-xs">{reason}</span>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                    <div className="text-gray-400 text-center">No data yet</div>
                   </div>
                 </CardContent>
               </Card>
@@ -450,6 +516,13 @@ export default function ProfilePage() {
           </main>
         </div>
       </div>
+      {saveMessage && (
+        <div className="mt-2">
+          <Alert variant="default">
+            <AlertDescription>{saveMessage}</AlertDescription>
+          </Alert>
+        </div>
+      )}
     </div>
   )
 }

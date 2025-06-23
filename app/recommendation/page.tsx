@@ -34,6 +34,8 @@ export default function RecommendationPage() {
     setIsAnalyzing(true)
     setRecommendations([])
     setError(null)
+    setSaveStatus({})
+    setSaveMessage({})
     try {
       const res = await fetch("/api/recommendation", {
         method: "POST",

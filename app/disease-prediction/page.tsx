@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Upload, Camera, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
 import Image from "next/image"
 import { supabase } from '@/lib/supabase'
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function DiseasePredictionPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -116,6 +117,13 @@ export default function DiseasePredictionPage() {
       setIsSaving(false)
     }
   }
+
+  useEffect(() => {
+    if (saveMessage) {
+      const timer = setTimeout(() => setSaveMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [saveMessage]);
 
   return (
     <div className="container px-4 py-8">
@@ -258,14 +266,10 @@ export default function DiseasePredictionPage() {
                     </Button>
                   </div>
                   {saveMessage && (
-                    <div
-                      className={
-                        saveMessage === 'Prediction saved to your profile!'
-                          ? 'mt-2 text-sm text-center text-green-600 bg-green-100 border border-green-300 rounded shadow-sm px-4 py-2'
-                          : 'mt-2 text-sm text-center text-red-500 bg-red-100 border border-red-300 rounded shadow-sm px-4 py-2'
-                      }
-                    >
-                      {saveMessage}
+                    <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-md">
+                      <Alert variant="default">
+                        <AlertDescription className="text-center">{saveMessage}</AlertDescription>
+                      </Alert>
                     </div>
                   )}
                 </div>
