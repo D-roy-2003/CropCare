@@ -3,12 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Upload, Camera, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
+import { Upload, Camera, AlertTriangle, CheckCircle, Loader2, Eye } from "lucide-react"
 import Image from "next/image"
 import { supabase } from '@/lib/supabase'
 
@@ -19,6 +20,8 @@ export default function DiseasePredictionPage() {
   const [result, setResult] = useState<any>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -28,6 +31,7 @@ export default function DiseasePredictionPage() {
       reader.onload = (e) => {
         setSelectedImage(e.target?.result as string)
         setResult(null)
+        setImageUrl(null)
       }
       reader.readAsDataURL(file)
     }
@@ -55,15 +59,29 @@ export default function DiseasePredictionPage() {
       const data = await response.json()
       console.log(data)
 
+      // Upload image to Supabase for the details page
+      const fileExt = selectedFile.name.split('.').pop()
+      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
+      const { data: uploadData, error: uploadError } = await supabase.storage.from('cropcare').upload(fileName, selectedFile)
+      
+      let uploadedImageUrl = selectedImage // fallback to base64
+      if (!uploadError && uploadData) {
+        uploadedImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cropcare/${fileName}`
+        setImageUrl(uploadedImageUrl)
+      }
+
       // Assuming the backend returns the top prediction and Gemini results
       const topPrediction = data.predictions[0]
-      setResult({
+      const resultData = {
         disease: topPrediction.class,
         confidence: topPrediction.confidence,
         severity: data.gemini_severity,
         treatment: data.gemini_treatment,
         prevention: data.gemini_prevention,
-      })
+        imageUrl: uploadedImageUrl
+      }
+      
+      setResult(resultData)
     } catch (error) {
       console.error("Error analyzing image:", error)
       setResult({
@@ -72,6 +90,7 @@ export default function DiseasePredictionPage() {
         severity: "Could not retrieve severity",
         treatment: "Could not retrieve treatment information.",
         prevention: "Could not retrieve prevention information.",
+        imageUrl: selectedImage
       })
     } finally {
       setIsAnalyzing(false)
@@ -91,11 +110,17 @@ export default function DiseasePredictionPage() {
     if (!selectedFile || !result) return
     setIsSaving(true)
     try {
-      const fileExt = selectedFile.name.split('.').pop()
-      const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
-      const { data: uploadData, error: uploadError } = await supabase.storage.from('cropcare').upload(fileName, selectedFile)
-      if (uploadError) throw uploadError
-      const imageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cropcare/${fileName}`
+      let finalImageUrl = imageUrl
+      
+      // If we don't have a Supabase URL yet, upload now
+      if (!finalImageUrl || finalImageUrl.startsWith('data:')) {
+        const fileExt = selectedFile.name.split('.').pop()
+        const fileName = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`
+        const { data: uploadData, error: uploadError } = await supabase.storage.from('cropcare').upload(fileName, selectedFile)
+        if (uploadError) throw uploadError
+        finalImageUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/cropcare/${fileName}`
+      }
+      
       const response = await fetch('/api/save-prediction', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,7 +130,7 @@ export default function DiseasePredictionPage() {
           severity: result.severity,
           treatment: result.treatment,
           prevention: result.prevention,
-          imageUrl
+          imageUrl: finalImageUrl
         })
       })
       if (!response.ok) throw new Error('Failed to save prediction')
@@ -115,6 +140,21 @@ export default function DiseasePredictionPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleViewDetails = () => {
+    if (!result) return
+    
+    const params = new URLSearchParams({
+      disease: result.disease,
+      confidence: result.confidence.toString(),
+      severity: result.severity,
+      treatment: result.treatment,
+      prevention: result.prevention,
+      imageUrl: result.imageUrl || selectedImage || ''
+    })
+    
+    router.push(`/disease-details?${params.toString()}`)
   }
 
   return (
@@ -153,6 +193,7 @@ export default function DiseasePredictionPage() {
                       setResult(null)
                       setSaveMessage(null)
                       setIsSaving(false)
+                      setImageUrl(null)
                     }} variant="outline" size="sm">
                       Remove Image
                     </Button>
@@ -250,7 +291,8 @@ export default function DiseasePredictionPage() {
                     </p>
                   </div>
                   <div className="flex gap-4 mt-4">
-                    <Button variant="secondary" className="flex-1" onClick={() => {/* TODO: Navigate to details page */}}>
+                    <Button variant="secondary" className="flex-1" onClick={handleViewDetails}>
+                      <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </Button>
                     <Button variant="default" className="flex-1" onClick={handleSaveToProfile} disabled={isSaving}>
