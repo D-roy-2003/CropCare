@@ -8,10 +8,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Upload, Camera, AlertTriangle, CheckCircle, Loader2 } from "lucide-react"
+import { Upload, Camera, AlertTriangle, CheckCircle, Loader2, Eye } from "lucide-react"
 import Image from "next/image"
 import { supabase } from '@/lib/supabase'
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useRouter } from "next/navigation"
 
 export default function DiseasePredictionPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -20,6 +21,7 @@ export default function DiseasePredictionPage() {
   const [result, setResult] = useState<any>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -116,6 +118,19 @@ export default function DiseasePredictionPage() {
     } finally {
       setIsSaving(false)
     }
+  }
+
+  const handleViewDetails = () => {
+    if (!result) return
+    const params = new URLSearchParams({
+      disease: result.disease,
+      confidence: result.confidence.toString(),
+      severity: result.severity,
+      treatment: result.treatment,
+      prevention: result.prevention,
+      imageUrl: result.imageUrl || selectedImage || ''
+    })
+    router.push(`/disease-details?${params.toString()}`)
   }
 
   useEffect(() => {
@@ -258,7 +273,8 @@ export default function DiseasePredictionPage() {
                     </p>
                   </div>
                   <div className="flex gap-4 mt-4">
-                    <Button variant="secondary" className="flex-1" onClick={() => {/* TODO: Navigate to details page */}}>
+                    <Button variant="secondary" className="flex-1" onClick={handleViewDetails}>
+                      <Eye className="h-4 w-4 mr-2" />
                       View Details
                     </Button>
                     <Button variant="default" className="flex-1" onClick={handleSaveToProfile} disabled={isSaving}>
