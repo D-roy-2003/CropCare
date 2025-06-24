@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Mail, Phone, MapPin, Clock, Send } from "lucide-react"
+import Swal from "sweetalert2"
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -20,15 +21,81 @@ export default function ContactPage() {
     category: "",
     message: "",
   })
+  const [countryCode, setCountryCode] = useState("+91")
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }))
+    if (field === "phone") {
+      // Only allow digits, max 10
+      const digits = value.replace(/\D/g, "").slice(0, 10)
+      setFormData((prev) => ({ ...prev, phone: digits }))
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }))
+    }
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Form submitted:", formData)
-    // Handle form submission
+    // Validation (basic)
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Please fill out all required fields.",
+      })
+      return
+    }
+    if (formData.phone && formData.phone.length !== 10) {
+      Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Phone number must be exactly 10 digits.",
+      })
+      return
+    }
+    // Prepare data for Web3Forms
+    const payload: Record<string, string> = {
+      ...formData,
+      access_key: process.env.NEXT_PUBLIC_VITE_EMAIL_KEY || "",
+      countryCode,
+    }
+    if (formData.phone) {
+      payload.phone = `${countryCode}${formData.phone}`
+    }
+    // Remove empty optional fields
+    Object.keys(payload).forEach((key) => {
+      if (!payload[key]) delete payload[key]
+    })
+    try {
+      const res = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(payload),
+      }).then((res) => res.json())
+      if (res.success) {
+        Swal.fire({
+          title: "Message Sent!",
+          text: "We'll get back to you soon!",
+          icon: "success",
+        })
+        setFormData({ name: "", email: "", phone: "", subject: "", category: "", message: "" })
+        setCountryCode("+91")
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: res.message || "Something went wrong. Please try again.",
+        })
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Oops...",
+        text: "Something went wrong. Please try again.",
+      })
+    }
   }
 
   return (
@@ -151,13 +218,37 @@ export default function ContactPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        type="tel"
-                        placeholder="Enter your phone number"
-                        value={formData.phone}
-                        onChange={(e) => handleInputChange("phone", e.target.value)}
-                      />
+                      <div className="flex rounded-lg overflow-hidden border border-gray-300 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-transparent">
+                        <select
+                          id="countryCode"
+                          value={countryCode}
+                          onChange={e => setCountryCode(e.target.value)}
+                          className="px-2 py-2 bg-gray-50 text-gray-700 border-none focus:ring-0 w-auto min-w-[70px] text-sm h-10"
+                          required
+                        >
+                          <option value="+1">us +1</option>
+                          <option value="+44">uk +44</option>
+                          <option value="+91">in +91</option>
+                          <option value="+33">fr +33</option>
+                          <option value="+49">de +49</option>
+                          <option value="+81">jp +81</option>
+                          <option value="+86">cn +86</option>
+                          <option value="+234">ng +234</option>
+                          <option value="+27">za +27</option>
+                          <option value="+20">eg +20</option>
+                        </select>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          placeholder="123 456 7890"
+                          value={formData.phone}
+                          onChange={e => handleInputChange("phone", e.target.value)}
+                          maxLength={10}
+                          pattern="\d{10}"
+                          required={false}
+                          className="flex-1 px-3 py-2 border-none focus:ring-0 text-sm h-10"
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="category">Category</Label>
