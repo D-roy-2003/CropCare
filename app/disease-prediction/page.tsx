@@ -13,6 +13,7 @@ import { Upload, Camera, AlertTriangle, CheckCircle, Loader2, Eye } from "lucide
 import Image from "next/image"
 import { supabase } from '@/lib/supabase'
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useToast } from "@/hooks/use-toast"
 
 export default function DiseasePredictionPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
@@ -23,6 +24,38 @@ export default function DiseasePredictionPage() {
   const [saveMessage, setSaveMessage] = useState<string | null>(null)
   const [imageUrl, setImageUrl] = useState<string | null>(null)
   const router = useRouter()
+  const { toast } = useToast();
+
+  // Disease name mapping
+  const diseaseNameMap: Record<string, string> = {
+    "Apple__Healthy": "Healthy Apple Leaf",
+    "Apple___Apple_scab": "Apple Scab Disease",
+    "Apple___Black_rot": "Apple Black Rot Disease",
+    "Apple___Cedar_rust": "Apple Cedar Rust Disease",
+    "Corn_(maize)___Cercospora_leaf_spot_Gray_leaf_spot": "Corn Gray Leaf Spot (Cercospora Leaf Spot) Disease",
+    "Corn_(maize)___Common_rust_": "Corn Common Rust Disease",
+    "Corn_(maize)___Northern_Leaf_Blight": "Corn Northern Leaf Blight Disease ",
+    "Corn_(maize)___healthy": "Healthy Corn Leaf",
+    "Grape_Black_rot": "Grape Black Rot Disease",
+    "Grape__Healthy": "Healthy Grape Leaf",
+    "Grape___Esca_(Black_Measles)": "Grape Esca (Black Measles) Disease",
+    "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": "Grape Leaf Blight (Isariopsis Leaf Spot) Disease",
+    "Rice_Bacterialblight": "Rice Bacterial Blight Disease",
+    "Rice_BrownSpot": "Rice Brown Spot Disease",
+    "Rice_Healthy": "Healthy Rice Leaf",
+    "Rice_LeafBlast": "Rice Leaf Blast Disease",
+    "Rice__Tungro__disease": "Rice Tungro Disease",
+    "Tomato___Bacterial_spot": "Tomato Bacterial Spot Disease",
+    "Tomato___Early_blight": "Tomato Early Blight Disease",
+    "Tomato___Late_blight": "Tomato Late Blight Disease",
+    "Tomato___Leaf_Mold": "Tomato Leaf Mold Disease",
+    "Tomato___Septoria_leaf_spot": "Tomato Septoria Leaf Spot Disease",
+    "Tomato___Spider_mites Two-spotted_spider_mite": "Tomato Spider Mites (Two-Spotted Spider Mite) Disease",
+    "Tomato___Target_Spot": "Tomato Target Spot Disease",
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": "Tomato Yellow Leaf Curl Virus",
+    "Tomato___Tomato_mosaic_virus": "Tomato Mosaic Virus",
+    "Tomato___healthy": "Healthy Tomato Leaf"
+  }
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -105,7 +138,12 @@ export default function DiseasePredictionPage() {
   const handleSaveToProfile = async () => {
     setSaveMessage(null)
     if (!isLoggedIn()) {
-      setSaveMessage('You have to login to save the info')
+      toast({
+        title: "You have to login to save the info",
+        description: "You must be logged in to save the prediction to your profile.",
+        duration: 4000,
+        variant: "destructive"
+      });
       return
     }
     if (!selectedFile || !result) return
@@ -143,6 +181,15 @@ export default function DiseasePredictionPage() {
 
   const handleViewDetails = () => {
     if (!result) return
+    if (!isLoggedIn()) {
+      toast({
+        title: "Signin to see the detailed report !!",
+        description: "You must be logged in to view detailed disease analysis.",
+        duration: 4000,
+        variant: "destructive"
+      });
+      return;
+    }
     const params = new URLSearchParams({
       disease: result.disease,
       confidence: result.confidence.toString(),
@@ -262,7 +309,7 @@ export default function DiseasePredictionPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">Disease Detected:</span>
-                    <Badge variant="destructive">{result.disease}</Badge>
+                    <Badge variant="destructive">{diseaseNameMap[result.disease] || result.disease}</Badge>
                   </div>
 
                   <div className="flex items-center justify-between">

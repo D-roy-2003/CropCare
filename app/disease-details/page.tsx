@@ -44,6 +44,37 @@ interface DiseaseDetails {
   imageUrl: string
 }
 
+// Disease class to user-friendly name mapping
+const diseaseNameMap: Record<string, string> = {
+  "Apple__Healthy": "Healthy Apple Leaf",
+  "Apple___Apple_scab": "Apple Scab Disease",
+  "Apple___Black_rot": "Apple Black Rot Disease",
+  "Apple___Cedar_rust": "Apple Cedar Rust Disease",
+  "Corn_(maize)___Cercospora_leaf_spot_Gray_leaf_spot": "Corn Gray Leaf Spot (Cercospora Leaf Spot) Disease",
+  "Corn_(maize)___Common_rust_": "Corn Common Rust Disease",
+  "Corn_(maize)___Northern_Leaf_Blight": "Corn Northern Leaf Blight Disease ",
+  "Corn_(maize)___healthy": "Healthy Corn Leaf",
+  "Grape_Black_rot": "Grape Black Rot Disease",
+  "Grape__Healthy": "Healthy Grape Leaf",
+  "Grape___Esca_(Black_Measles)": "Grape Esca (Black Measles) Disease",
+  "Grape___Leaf_blight_(Isariopsis_Leaf_Spot)": "Grape Leaf Blight (Isariopsis Leaf Spot) Disease",
+  "Rice_Bacterialblight": "Rice Bacterial Blight Disease",
+  "Rice_BrownSpot": "Rice Brown Spot Disease",
+  "Rice_Healthy": "Healthy Rice Leaf",
+  "Rice_LeafBlast": "Rice Leaf Blast Disease",
+  "Rice__Tungro__disease": "Rice Tungro Disease",
+  "Tomato___Bacterial_spot": "Tomato Bacterial Spot Disease",
+  "Tomato___Early_blight": "Tomato Early Blight Disease",
+  "Tomato___Late_blight": "Tomato Late Blight Disease",
+  "Tomato___Leaf_Mold": "Tomato Leaf Mold Disease",
+  "Tomato___Septoria_leaf_spot": "Tomato Septoria Leaf Spot Disease",
+  "Tomato___Spider_mites Two-spotted_spider_mite": "Tomato Spider Mites (Two-Spotted Spider Mite) Disease",
+  "Tomato___Target_Spot": "Tomato Target Spot Disease",
+  "Tomato___Tomato_Yellow_Leaf_Curl_Virus": "Tomato Yellow Leaf Curl Virus",
+  "Tomato___Tomato_mosaic_virus": "Tomato Mosaic Virus",
+  "Tomato___healthy": "Healthy Tomato Leaf"
+};
+
 export default function DiseaseDetailsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
@@ -53,6 +84,10 @@ export default function DiseaseDetailsPage() {
   const [copySuccess, setCopySuccess] = useState(false)
   const [shareUrl, setShareUrl] = useState<string | null>(null)
   const [shareError, setShareError] = useState<string | null>(null)
+  const [geminiInfo, setGeminiInfo] = useState<any>(null);
+  const [geminiLoading, setGeminiLoading] = useState(false);
+  const [geminiError, setGeminiError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
 
   useEffect(() => {
     // Get data from URL parameters
@@ -75,6 +110,32 @@ export default function DiseaseDetailsPage() {
     }
     setIsLoading(false)
   }, [searchParams])
+
+  useEffect(() => {
+    if (diseaseData?.disease) {
+      setGeminiLoading(true);
+      setGeminiError(null);
+      fetch("/api/gemini-disease-info", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disease: diseaseData.disease })
+      })
+        .then(res => res.json())
+        .then(data => {
+          setGeminiInfo(data);
+          if (data.error) setGeminiError(data.error);
+        })
+        .catch(e => setGeminiError(e?.toString() || "Unknown error"))
+        .finally(() => setGeminiLoading(false));
+    }
+  }, [diseaseData?.disease]);
+
+  useEffect(() => {
+    // Check authentication on mount
+    if (typeof window !== 'undefined') {
+      setIsAuthenticated(Boolean(localStorage.getItem('user')));
+    }
+  }, []);
 
   // Create shareable link when needed (not automatically)
   const createShareableLink = async () => {
@@ -268,11 +329,27 @@ export default function DiseaseDetailsPage() {
 
     setIsGeneratingPDF(true)
     try {
-      const diseaseInfo = getDiseaseInfo(diseaseData.disease)
+      // Map geminiInfo to DiseaseInfo interface for PDF
+      const diseaseInfo = geminiInfo && !geminiInfo.error ? {
+        scientificName: geminiInfo.scientificName || 'Unknown',
+        pathogenType: geminiInfo.pathogenType || 'Unknown',
+        transmissionMode: geminiInfo.transmission || 'Unknown',
+        hostRange: geminiInfo.hostRange || 'Unknown',
+        economicImpact: geminiInfo.economicImpact || 'Unknown',
+        geographicalDistribution: geminiInfo.distribution || 'Unknown',
+        symptoms: geminiInfo.symptoms || 'Unknown',
+        favorableConditions: geminiInfo.favorableConditions || 'Unknown',
+      } : getDiseaseInfo(diseaseData.disease);
       const detailedTreatment = getDetailedTreatment(diseaseData.disease, diseaseData.treatment)
       const detailedPrevention = getDetailedPrevention(diseaseData.disease, diseaseData.prevention)
 
-      await generateDiseasePDF(diseaseData, diseaseInfo, detailedTreatment, detailedPrevention)
+      // Use mapped disease name for PDF
+      const pdfDiseaseData = {
+        ...diseaseData,
+        disease: displayDiseaseName
+      };
+
+      await generateDiseasePDF(pdfDiseaseData, diseaseInfo, detailedTreatment, detailedPrevention)
     } catch (error) {
       console.error('Error generating PDF:', error)
       alert('Failed to generate PDF report. Please try again.')
@@ -387,6 +464,27 @@ ${isHealthy ?
     window.open(`sms:?body=${smsText}`, '_blank')
   }
 
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-center">Signin Required</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-red-600 dark:text-red-400 mb-4">
+              Signin to see the detailed report !!
+            </p>
+            <Button onClick={() => router.push('/login')} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -419,9 +517,40 @@ ${isHealthy ?
     )
   }
 
+  // Gemini error display for debugging
+  if (geminiError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-center">Gemini API Error</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-center text-red-600 dark:text-red-400 mb-4">
+              {typeof geminiError === 'string' ? geminiError : 'Failed to fetch disease details from Gemini.'}
+            </p>
+            {/* Show full Gemini error details if available */}
+            {geminiInfo && (
+              <div className="bg-gray-100 dark:bg-gray-900 p-2 rounded text-xs overflow-x-auto mb-4">
+                <pre>{JSON.stringify(geminiInfo, null, 2)}</pre>
+              </div>
+            )}
+            <Button onClick={() => router.push('/disease-prediction')} className="w-full">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Disease Prediction
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const diseaseInfo = getDiseaseInfo(diseaseData.disease)
   const detailedTreatment = getDetailedTreatment(diseaseData.disease, diseaseData.treatment)
   const detailedPrevention = getDetailedPrevention(diseaseData.disease, diseaseData.prevention)
+
+  // Map disease class to user-friendly name
+  const displayDiseaseName = diseaseNameMap[diseaseData.disease] || diseaseData.disease;
 
   return (
     <div className="container px-4 py-8">
@@ -512,7 +641,7 @@ ${isHealthy ?
                 {/* Basic Info */}
                 <div className="space-y-4">
                   <div>
-                    <h3 className="font-semibold text-lg mb-2">{diseaseData.disease}</h3>
+                    <h3 className="font-semibold text-lg mb-2">{displayDiseaseName}</h3>
                     <div className="flex flex-wrap gap-2">
                       <Badge className={`${getConfidenceColor(diseaseData.confidence)} border`}>
                         {diseaseData.confidence}% Confidence
@@ -537,19 +666,27 @@ ${isHealthy ?
                     <div className="space-y-2 text-sm">
                       <div>
                         <span className="font-medium">Scientific Name:</span>
-                        <p className="text-gray-600 dark:text-gray-300">{diseaseInfo.scientificName}</p>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {geminiLoading ? 'Loading...' : geminiInfo?.scientificName || geminiError || 'N/A'}
+                        </p>
                       </div>
                       <div>
                         <span className="font-medium">Pathogen Type:</span>
-                        <p className="text-gray-600 dark:text-gray-300">{diseaseInfo.pathogenType}</p>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {geminiLoading ? 'Loading...' : geminiInfo?.pathogenType || geminiError || 'N/A'}
+                        </p>
                       </div>
                       <div>
                         <span className="font-medium">Transmission:</span>
-                        <p className="text-gray-600 dark:text-gray-300">{diseaseInfo.transmissionMode}</p>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {geminiLoading ? 'Loading...' : geminiInfo?.transmission || geminiError || 'N/A'}
+                        </p>
                       </div>
                       <div>
                         <span className="font-medium">Economic Impact:</span>
-                        <p className="text-gray-600 dark:text-gray-300">{diseaseInfo.economicImpact}</p>
+                        <p className="text-gray-600 dark:text-gray-300">
+                          {geminiLoading ? 'Loading...' : geminiInfo?.economicImpact || geminiError || 'N/A'}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -575,7 +712,7 @@ ${isHealthy ?
                     Symptoms
                   </h4>
                   <p className="text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    {diseaseInfo.symptoms}
+                    {geminiLoading ? 'Loading...' : geminiInfo?.symptoms || geminiError || 'N/A'}
                   </p>
                 </div>
                 <div>
@@ -584,17 +721,21 @@ ${isHealthy ?
                     Favorable Conditions
                   </h4>
                   <p className="text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
-                    {diseaseInfo.favorableConditions}
+                    {geminiLoading ? 'Loading...' : geminiInfo?.favorableConditions || geminiError || 'N/A'}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="font-medium">Host Range:</span>
-                    <p className="text-gray-600 dark:text-gray-300">{diseaseInfo.hostRange}</p>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {geminiLoading ? 'Loading...' : geminiInfo?.hostRange || geminiError || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <span className="font-medium">Distribution:</span>
-                    <p className="text-gray-600 dark:text-gray-300">{diseaseInfo.geographicalDistribution}</p>
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {geminiLoading ? 'Loading...' : geminiInfo?.distribution || geminiError || 'N/A'}
+                    </p>
                   </div>
                 </div>
               </CardContent>
