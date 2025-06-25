@@ -132,118 +132,121 @@ export function Navbar() {
         </nav>
 
         {/* Right side actions */}
-        {mounted && (
-          <div className="flex items-center space-x-2">
-            <ThemeToggle />
-            {!isLoading && (
-              <>
-                {user ? (
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                        <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                            {getUserInitials(user)}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-56" align="end" forceMount>
-                      <div className="flex items-center justify-start gap-2 p-2">
-                        <div className="flex flex-col space-y-1 leading-none">
-                          <p className="font-medium">{user.firstName} {user.lastName}</p>
-                          <p className="w-[200px] truncate text-sm text-muted-foreground">
-                            {user.email}
-                          </p>
-                        </div>
+        <div className="flex items-center space-x-2">
+          {/* Theme Toggle: Render always, no disabled prop */}
+          <ThemeToggle />
+
+          {/* Auth Buttons */}
+          {!isLoading ? (
+            user ? (
+              mounted && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                          {getUserInitials(user)}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <div className="flex items-center justify-start gap-2 p-2">
+                      <div className="flex flex-col space-y-1 leading-none">
+                        <p className="font-medium">{user.firstName} {user.lastName}</p>
+                        <p className="w-[200px] truncate text-sm text-muted-foreground">
+                          {user.email}
+                        </p>
                       </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href="/profile" className="cursor-pointer">
-                          <User className="mr-2 h-4 w-4" />
-                          Profile
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                        <LogOut className="mr-2 h-4 w-4" />
-                        Log out
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <Button variant="outline" size="sm" asChild className="hidden sm:flex">
-                    <Link href="/login">
-                      <User className="h-4 w-4 mr-2" />
-                      Sign In
-                    </Link>
-                  </Button>
-                )}
-              </>
-            )}
-            {/* Mobile menu */}
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="md:hidden">
-                  <Menu className="h-4 w-4" />
-                  <span className="sr-only">Toggle menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <div className="flex flex-col space-y-4 mt-4">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        "text-sm font-medium transition-colors hover:text-green-600 dark:hover:text-green-400 py-2",
-                        pathname === item.href ? "text-green-600 dark:text-green-400" : "text-muted-foreground",
-                      )}
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
-                  {!isLoading && (
-                    <>
-                      {user ? (
-                        <div className="pt-4 border-t">
-                          <div className="flex items-center space-x-2 mb-4">
-                            <Avatar className="h-8 w-8">
-                              <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
-                                {getUserInitials(user)}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div>
-                              <p className="font-medium text-sm">{user.firstName} {user.lastName}</p>
-                              <p className="text-xs text-muted-foreground">{user.email}</p>
-                            </div>
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <User className="mr-2 h-4 w-4" />
+                        Profile
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )
+            ) : (
+              <Button variant="outline" size="sm" asChild className="hidden sm:flex" disabled={!mounted}>
+                <Link href="/login">
+                  <User className="h-4 w-4 mr-2" />
+                  Sign In
+                </Link>
+              </Button>
+            )
+          ) : (
+            <div style={{ width: 80, height: 32 }} />
+          )}
+          {/* Mobile menu */}
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden">
+                <Menu className="h-4 w-4" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <div className="flex flex-col space-y-4 mt-4">
+                {navigation.map((item) => (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "text-sm font-medium transition-colors hover:text-green-600 dark:hover:text-green-400 py-2",
+                      pathname === item.href ? "text-green-600 dark:text-green-400" : "text-muted-foreground",
+                    )}
+                  >
+                    {item.name}
+                  </Link>
+                ))}
+                {!isLoading && (
+                  <>
+                    {user ? (
+                      <div className="pt-4 border-t">
+                        <div className="flex items-center space-x-2 mb-4">
+                          <Avatar className="h-8 w-8">
+                            <AvatarFallback className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                              {getUserInitials(user)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <p className="font-medium text-sm">{user.firstName} {user.lastName}</p>
+                            <p className="text-xs text-muted-foreground">{user.email}</p>
                           </div>
-                          <Button variant="ghost" asChild className="w-full justify-start mb-2">
-                            <Link href="/profile">
-                              <User className="h-4 w-4 mr-2" />
-                              Profile
-                            </Link>
-                          </Button>
-                          <Button variant="outline" onClick={handleLogout} className="w-full">
-                            <LogOut className="h-4 w-4 mr-2" />
-                            Log out
-                          </Button>
                         </div>
-                      ) : (
-                        <Button variant="outline" asChild className="mt-4">
-                          <Link href="/login">
+                        <Button variant="ghost" asChild className="w-full justify-start mb-2">
+                          <Link href="/profile">
                             <User className="h-4 w-4 mr-2" />
-                            Sign In
+                            Profile
                           </Link>
                         </Button>
-                      )}
-                    </>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        )}
+                        <Button variant="outline" onClick={handleLogout} className="w-full">
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Log out
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" asChild className="mt-4" disabled={!mounted}>
+                        <Link href="/login">
+                          <User className="h-4 w-4 mr-2" />
+                          Sign In
+                        </Link>
+                      </Button>
+                    )}
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
     </header>
   )

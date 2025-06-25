@@ -22,6 +22,7 @@ export default function ContactPage() {
     message: "",
   })
   const [countryCode, setCountryCode] = useState("+91")
+  const FORMSPREE_ENDPOINT = process.env.NEXT_PUBLIC_FORMSPREE_ENDPOINT;
 
   const handleInputChange = (field: string, value: string) => {
     if (field === "phone") {
@@ -52,29 +53,38 @@ export default function ContactPage() {
       })
       return
     }
-    // Prepare data for Web3Forms
+    // Prepare data for Formspree
     const payload: Record<string, string> = {
-      ...formData,
-      access_key: process.env.NEXT_PUBLIC_VITE_EMAIL_KEY || "",
-      countryCode,
-    }
-    if (formData.phone) {
-      payload.phone = `${countryCode}${formData.phone}`
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone ? `${countryCode}${formData.phone}` : '',
+      subject: formData.subject,
+      category: formData.category,
+      message: formData.message,
     }
     // Remove empty optional fields
     Object.keys(payload).forEach((key) => {
       if (!payload[key]) delete payload[key]
     })
     try {
-      const res = await fetch("https://api.web3forms.com/submit", {
+      if (!FORMSPREE_ENDPOINT) {
+        Swal.fire({
+          icon: "error",
+          title: "Configuration Error",
+          text: "Formspree endpoint is not set. Please check your .env.local and restart the server.",
+        });
+        return;
+      }
+      const res = await fetch(FORMSPREE_ENDPOINT, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
         body: JSON.stringify(payload),
-      }).then((res) => res.json())
-      if (res.success) {
+      })
+      const data = await res.json()
+      if (res.ok) {
         Swal.fire({
           title: "Message Sent!",
           text: "We'll get back to you soon!",
@@ -86,7 +96,7 @@ export default function ContactPage() {
         Swal.fire({
           icon: "error",
           title: "Oops...",
-          text: res.message || "Something went wrong. Please try again.",
+          text: data?.errors?.[0]?.message || data?.message || "Something went wrong. Please try again.",
         })
       }
     } catch (error) {

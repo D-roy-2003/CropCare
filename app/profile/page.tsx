@@ -291,10 +291,10 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-[#101014] flex flex-col">
-      <div className="container mx-auto px-8 py-8">
-        <div className="grid grid-cols-12 gap-6">
+      <div className="container mx-auto px-2 sm:px-4 md:px-8 py-4 sm:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
           {/* Sidebar */}
-          <aside className="col-span-3 flex flex-col gap-0">
+          <aside className="md:col-span-3 flex flex-col gap-0 mb-4 md:mb-0">
             <Card className="p-0 bg-white dark:bg-[#18181b] border dark:border-[#23272f] shadow-md">
               <CardContent className="flex flex-col items-center pt-8 pb-4">
                 <div className="relative mb-2">
@@ -323,19 +323,19 @@ export default function ProfilePage() {
               <div className="font-semibold text-gray-700 dark:text-gray-200 mb-2 ml-2">Accounts</div>
               <div className="flex flex-col gap-1">
                 <button
-                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'settings' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
+                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'settings' ? 'font-bold border-l-4 border-green-500 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200' : 'hover:bg-gray-100 dark:hover:bg-[#23272f] text-gray-700 dark:text-gray-200'}`}
                   onClick={() => setActivePanel('settings')}
                 >
                   <Home className="h-4 w-4 mr-2" />Settings
                 </button>
                 <button
-                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'scanned' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
+                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'scanned' ? 'font-bold border-l-4 border-green-500 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200' : 'hover:bg-gray-100 dark:hover:bg-[#23272f] text-gray-700 dark:text-gray-200'}`}
                   onClick={() => setActivePanel('scanned')}
                 >
                   <span className="mr-2">🌱</span>Crops Scanned
                 </button>
                 <button
-                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'recommended' ? 'font-bold border-l-4 border-green-500 bg-green-50 text-green-700' : 'hover:bg-gray-100 text-gray-700'}`}
+                  className={`flex items-center px-4 py-2 rounded-l-lg text-left transition-all ${activePanel === 'recommended' ? 'font-bold border-l-4 border-green-500 bg-green-50 dark:bg-green-900 text-green-700 dark:text-green-200' : 'hover:bg-gray-100 dark:hover:bg-[#23272f] text-gray-700 dark:text-gray-200'}`}
                   onClick={() => setActivePanel('recommended')}
                 >
                   <span className="mr-2">📋</span>Crops Recommended
@@ -346,11 +346,11 @@ export default function ProfilePage() {
               <div className="font-semibold text-gray-700 dark:text-gray-200 mb-2 ml-2">Quick Stats</div>
               <div className="bg-white dark:bg-[#18181b] rounded-lg p-4 flex flex-col gap-2 shadow-sm border dark:border-[#23272f]">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-green-700">🌱 Scans Performed</span>
+                  <span className="flex items-center gap-1 text-green-700 dark:text-green-300">🌱 Scans Performed</span>
                   <span className="font-bold">{Array.isArray(cropsScanned) ? cropsScanned.length : 0}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="flex items-center gap-1 text-blue-700">📋 Recommendations</span>
+                  <span className="flex items-center gap-1 text-blue-700 dark:text-blue-300">📋 Recommendations</span>
                   <span className="font-bold">{Array.isArray(profile?.cropsRecommended) ? profile.cropsRecommended.length : 0}</span>
                 </div>
               </div>
@@ -358,11 +358,11 @@ export default function ProfilePage() {
           </aside>
 
           {/* Main Content */}
-          <main className="col-span-9 flex flex-col gap-8">
+          <main className="md:col-span-9 flex flex-col gap-8">
             {/* Profile Information Card */}
             <Card className="bg-white dark:bg-[#18181b] border dark:border-[#23272f] shadow-md">
               <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                   <div>
                     <CardTitle className="text-gray-900 dark:text-gray-100">Profile Information</CardTitle>
                     <CardDescription className="text-gray-500 dark:text-gray-400">Update your personal information and account details</CardDescription>
@@ -378,7 +378,7 @@ export default function ProfilePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                   <div className="space-y-2">
                     <Label htmlFor="fullName" className="text-gray-900 dark:text-gray-100">Full Name</Label>
                     <Input id="fullName" value={profile?.fullName} disabled={!isEditing} onChange={e => setProfile(p => p ? { ...p, fullName: e.target.value } : p)}
@@ -441,21 +441,21 @@ export default function ProfilePage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 border rounded-lg gap-2 sm:gap-0">
                       <div>
                         <h4 className="font-medium">Change Password</h4>
                         <p className="text-sm text-gray-600">Update your password to keep your account secure</p>
                       </div>
                       <Button variant="outline" size="sm">Change</Button>
                     </div>
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 border rounded-lg gap-2 sm:gap-0">
                       <div>
                         <h4 className="font-medium">Download Data</h4>
                         <p className="text-sm text-gray-600">Download a copy of your account data</p>
                       </div>
                       <Button variant="outline" size="sm">Download</Button>
                     </div>
-                    <div className="flex items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50">
+                    <div className="flex flex-col sm:flex-row items-center justify-between p-4 border border-red-200 rounded-lg bg-red-50 gap-2 sm:gap-0">
                       <div>
                         <h4 className="font-medium text-red-900">Delete Account</h4>
                         <p className="text-sm text-red-600">Permanently delete your account and all data</p>
@@ -477,8 +477,8 @@ export default function ProfilePage() {
                       <div className="text-gray-400 text-center">No data yet</div>
                     ) : (
                       cropsScanned.map((scan, idx) => (
-                        <div key={idx} className="flex items-center gap-6 bg-gray-50 rounded-lg p-4">
-                          <div className="w-24 h-24 bg-gray-200 rounded flex items-center justify-center overflow-hidden">
+                        <div key={idx} className="flex flex-col sm:flex-row items-center gap-6 bg-gray-50 dark:bg-[#23272f] rounded-lg p-4">
+                          <div className="w-24 h-24 bg-gray-200 dark:bg-[#23272f] rounded flex items-center justify-center overflow-hidden">
                             {scan.imageUrl ? (
                               <img src={scan.imageUrl} alt="Crop" className="object-cover w-24 h-24" />
                             ) : (
@@ -486,16 +486,16 @@ export default function ProfilePage() {
                             )}
                           </div>
                           <div className="flex-1">
-                            <div className="font-semibold text-lg mb-1">{scan.disease}</div>
-                            <div className="flex gap-4 text-sm mb-1">
+                            <div className="font-semibold text-lg mb-1 text-gray-900 dark:text-gray-100">{scan.disease}</div>
+                            <div className="flex flex-wrap gap-4 text-sm mb-1">
                               <span>Confidence <span className="font-bold ml-1">{scan.confidence}</span></span>
                               <span>Severity <span className="font-bold ml-1">{scan.severity}</span></span>
                             </div>
-                            <div className="flex gap-4">
-                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              <span className="bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-green-700 dark:text-green-200 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
                                 @ Treatment: {scan.treatment ? scan.treatment : 'N/A'}
                               </span>
-                              <span className="bg-green-100 px-2 py-1 rounded text-green-700 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
+                              <span className="bg-green-100 dark:bg-green-900 px-2 py-1 rounded text-green-700 dark:text-green-200 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
                                 @ Prevention Tips: {scan.prevention ? scan.prevention : 'N/A'}
                               </span>
                             </div>
@@ -516,19 +516,19 @@ export default function ProfilePage() {
                   <div className="flex flex-col gap-6">
                     {Array.isArray(profile?.cropsRecommended) && profile.cropsRecommended.length > 0 ? (
                       profile.cropsRecommended.map((rec, idx) => (
-                        <div key={idx} className="flex flex-col md:flex-row gap-6 bg-gray-50 rounded-lg p-4">
+                        <div key={idx} className="flex flex-col md:flex-row gap-6 bg-gray-50 dark:bg-[#23272f] rounded-lg p-4">
                           <div className="flex-1">
-                            <div className="font-semibold text-lg mb-1">{rec.crop}</div>
-                            <div className="flex gap-4 text-sm mb-1">
+                            <div className="font-semibold text-lg mb-1 text-gray-900 dark:text-gray-100">{rec.crop}</div>
+                            <div className="flex flex-wrap gap-4 text-sm mb-1">
                               <span>Suitability <span className="font-bold ml-1">{rec.suitability}</span></span>
                               <span>Profit <span className="font-bold ml-1">{rec.profit}</span></span>
                               <span>Expected Yield <span className="font-bold ml-1">{rec.expected_yield}</span></span>
                             </div>
-                            <div className="flex gap-4 text-sm mb-1">
+                            <div className="flex flex-wrap gap-4 text-sm mb-1">
                               <span>Best Season <span className="font-bold ml-1">{rec.best_season}</span></span>
                             </div>
                             <div className="flex flex-col gap-2 mt-2">
-                              <span className="bg-blue-100 px-2 py-1 rounded text-blue-700 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
+                              <span className="bg-blue-100 dark:bg-blue-900 px-2 py-1 rounded text-blue-700 dark:text-blue-200 text-xs max-w-xs overflow-x-auto whitespace-pre-line block">
                                 Why Recommended: {Array.isArray(rec.why_recommended) ? rec.why_recommended.join(', ') : (rec.why_recommended || 'N/A')}
                               </span>
                             </div>
