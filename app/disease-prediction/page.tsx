@@ -383,7 +383,7 @@ export default function DiseasePredictionPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 dark:text-gray-300">
-                Currently supports rice, wheat, corn, tomato, potato, and 20+ other major crops with continuous model
+                Currently supports Apple, Grape, Corn, Tomato and Rice, a total of 5 crops crops with continuous model
                 updates.
               </p>
             </CardContent>

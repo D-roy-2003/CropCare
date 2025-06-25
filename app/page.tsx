@@ -164,14 +164,14 @@ export default function HomePage() {
               <div className="flex items-center justify-center mb-4">
                 <Shield className="h-8 w-8 text-blue-600 dark:text-blue-400" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">50+</h3>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">22+</h3>
               <p className="text-gray-600 dark:text-gray-300">Crop Diseases Detected</p>
             </div>
             <div>
               <div className="flex items-center justify-center mb-4">
                 <Users className="h-8 w-8 text-purple-600 dark:text-purple-400" />
               </div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">10K+</h3>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">100+</h3>
               <p className="text-gray-600 dark:text-gray-300">Farmers Helped</p>
             </div>
           </div>

@@ -284,7 +284,7 @@ ${isHealthy ?
 
 🔗 View full report:`
 
-    return { title, text, url: window.location.href }
+    return { title, text, url: `${process.env.NEXT_PUBLIC_SITE_URL}/shared/${params.id}` }
   }
 
   const handleNativeShare = async () => {
@@ -304,7 +304,7 @@ ${isHealthy ?
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(window.location.href)
+      await navigator.clipboard.writeText(`${process.env.NEXT_PUBLIC_SITE_URL}/shared/${params.id}`)
       setCopySuccess(true)
       setTimeout(() => setCopySuccess(false), 2000)
     } catch (error) {

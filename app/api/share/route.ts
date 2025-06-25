@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       
       return {
         shareId: shareableReport._id,
-        shareUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/shared/${shareableReport._id}`
+        shareUrl: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/shared/${shareableReport._id}`
       }
     }
 

@@ -165,8 +165,8 @@ export default function DiseaseDetailsClient() {
     } catch (error: any) {
       console.error('Failed to create shareable link:', error)
       setShareError('Failed to create shareable link')
-      // Return current page URL as fallback
-      const fallbackUrl = window.location.href
+      // Return deployment URL as fallback
+      const fallbackUrl = `${process.env.NEXT_PUBLIC_SITE_URL}/shared/${diseaseData ? diseaseData.disease : ''}`
       setShareUrl(fallbackUrl)
       return fallbackUrl
     }
@@ -318,13 +318,13 @@ export default function DiseaseDetailsClient() {
     const status = isHealthy ? '✅ Healthy Crop' : '⚠️ Disease Detected';
     const title = `🌾 Crop Analysis Report: ${diseaseData.disease}`;
     const text = `${status}\n\n🔬 Disease: ${diseaseData.disease}\n📊 Confidence: ${diseaseData.confidence}%\n⚡ Severity: ${diseaseData.severity}\n\n${isHealthy ? '✅ Your crop appears healthy! Continue with current management practices.' : `🚨 Treatment needed: ${diseaseData.treatment.substring(0, 100)}...`}\n\n📱 Analyzed with Crop Care AI - Advanced disease detection for farmers\n\n🔗 View full report:`;
-    return { title, text, url: url || window.location.href };
+    return { title, text, url: url || `${process.env.NEXT_PUBLIC_SITE_URL}/shared/${diseaseData.disease}` };
   };
 
   const handleCopyLink = async () => {
     try {
       const url = await createShareableLink();
-      const textToCopy = url || window.location.href;
+      const textToCopy = url || `${process.env.NEXT_PUBLIC_SITE_URL}/shared/${diseaseData ? diseaseData.disease : ''}`;
       if (navigator.clipboard && window.isSecureContext) {
         window.focus();
         await navigator.clipboard.writeText(textToCopy);
@@ -351,7 +351,7 @@ export default function DiseaseDetailsClient() {
       }
     } catch (error) {
       const url = await createShareableLink();
-      alert(`Please copy this link manually: ${url || window.location.href}`);
+      alert(`Please copy this link manually: ${url || `${process.env.NEXT_PUBLIC_SITE_URL}/shared/${diseaseData ? diseaseData.disease : ''}`}`);
     }
   };
 
