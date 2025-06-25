@@ -1,32 +1,39 @@
 # 🌾 Crop Care - AI-Powered Agricultural Platform
 
-Crop Care is a modern web platform designed to empower farmers and agricultural professionals with advanced AI tools. Effortlessly predict crop diseases, receive personalized crop recommendations, and access real-time weather insights—all in one place. The backend, featuring two powerful machine learning models (Disease Prediction and Crop Recommendation), is securely deployed on Hugging Face for robust and scalable performance.
+Crop Care is a next-generation web platform designed to empower farmers, agronomists, and agricultural professionals with actionable AI insights. Our mission is to make advanced crop management accessible, data-driven, and easy for everyone—no technical expertise required.
 
-![Landing Page](public/landing.png)
+With Crop Care, you can:
+- **Diagnose crop diseases instantly** by uploading a photo of your crop leaf. Get not just a prediction, but also detailed, step-by-step treatment and prevention strategies tailored to your crop.
+- **Receive personalized crop recommendations** based on your local conditions, helping you maximize yield and sustainability.
+- **Access real-time weather forecasts** to plan your farming activities and reduce risk.
+- **Manage your farming profile and history** with a secure, user-friendly dashboard. Save, revisit, and share your reports anytime.
+- **Share professional, AI-generated reports** with agronomists, experts, or your farming community for collaboration and advice.
 
-## 🚀 What Can You Do with Crop Care?
-
-- **Disease Prediction:** Upload a photo of your crop leaf and instantly detect possible diseases, along with detailed treatment and prevention strategies.
-- **Crop Recommendation:** Get smart, data-driven suggestions on which crops to plant based on your local conditions.
-- **Weather Forecasting:** Access up-to-date weather data to plan your farming activities more effectively.
-- **Personal Dashboard:** Manage your profile, view past predictions, and save/share reports with ease.
-- **Seamless Sharing:** Generate shareable reports for collaboration or expert consultation.
-
-### Platform Highlights
-
-- Clean, intuitive interface for all devices
-- Fast, secure authentication and user management
-- All AI/ML processing handled by a robust backend (Hugging Face)
-- No technical expertise required—just upload, click, and get actionable insights!
+### What Makes Crop Care Unique?
+- **AI-Powered, End-to-End:** All predictions and recommendations are powered by robust machine learning models (deployed on Hugging Face), ensuring accuracy and reliability.
+- **User-Centric Design:** Clean, intuitive interface that works seamlessly on any device—mobile, tablet, or desktop.
+- **Actionable Insights:** Not just predictions, but clear, practical steps for treatment, prevention, and crop planning.
+- **Instant Sharing:** Generate and share secure, professional reports with a single click.
+- **No Technical Barriers:** Designed for real-world farmers and professionals—just upload, click, and get results.
 
 ---
 
-<div align="center">
-  <img src="public/disease_pred.png" alt="Disease Prediction" width="220" style="margin:8px;"/>
-  <img src="public/recommendation.png" alt="Crop Recommendation" width="220" style="margin:8px;"/>
-  <img src="public/weather.png" alt="Weather Forecast" width="220" style="margin:8px;"/>
-  <img src="public/profile.png" alt="Profile Dashboard" width="220" style="margin:8px;"/>
-</div>
+![Landing Page](public/landing.png)
+
+---
+
+## ✨ Feature Snapshots
+
+<table>
+  <tr>
+    <td align="center"><img src="public/disease_pred.png" alt="Disease Prediction" width="350"/><br/><b>Disease Prediction</b></td>
+    <td align="center"><img src="public/recommendation.png" alt="Crop Recommendation" width="350"/><br/><b>Crop Recommendation</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="public/weather.png" alt="Weather Forecast" width="350"/><br/><b>Weather Forecast</b></td>
+    <td align="center"><img src="public/profile.png" alt="Profile Dashboard" width="350"/><br/><b>Profile Dashboard</b></td>
+  </tr>
+</table>
 
 ---
 
