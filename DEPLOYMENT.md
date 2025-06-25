@@ -15,10 +15,6 @@ JWT_EXPIRES_IN=7d
 # Application URL (update for production)
 NEXTAUTH_URL=https://your-domain.com
 
-# SendGrid Email Configuration
-SENDGRID_API_KEY=SG.your-sendgrid-api-key
-EMAIL_FROM=noreply@your-domain.com
-
 # Security
 BCRYPT_ROUNDS=12
 ```
