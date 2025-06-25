@@ -186,7 +186,7 @@ export default function HomePage() {
               Ready to Transform Your Farming?
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-300">
-              Join thousands of farmers who are already using our AI-powered solutions to improve their crop yields and
+              Join hundreds of farmers who are already using our AI-powered solutions to improve their crop yields and
               reduce losses.
             </p>
             <Button size="lg" asChild>

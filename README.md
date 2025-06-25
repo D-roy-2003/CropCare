@@ -1,51 +1,45 @@
 # 🌾 Crop Care - AI-Powered Agricultural Platform
 
-A comprehensive agricultural platform that uses machine learning and AI to help farmers detect crop diseases, get crop recommendations, and access weather forecasting.
+Crop Care is a modern web platform designed to empower farmers and agricultural professionals with advanced AI tools. Effortlessly predict crop diseases, receive personalized crop recommendations, and access real-time weather insights—all in one place. The backend, featuring two powerful machine learning models (Disease Prediction and Crop Recommendation), is securely deployed on Hugging Face for robust and scalable performance.
 
-## ✨ Features
+![Landing Page](public/landing.png)
 
-- **🔍 Disease Prediction**: Upload crop images to detect diseases using CNN models with 95% accuracy
-- **🌱 Crop Recommendation**: Get personalized crop recommendations based on soil and climate data
-- **🌤️ Weather Forecasting**: Access accurate weather predictions for farming activities
-- **👤 User Authentication**: Secure signup, login, and profile management
-- **📱 Responsive Design**: Works seamlessly on desktop and mobile devices
-- **🌙 Dark Mode**: Toggle between light and dark themes
+## 🚀 What Can You Do with Crop Care?
 
-## 🚀 Tech Stack
+- **Disease Prediction:** Upload a photo of your crop leaf and instantly detect possible diseases, along with detailed treatment and prevention strategies.
+- **Crop Recommendation:** Get smart, data-driven suggestions on which crops to plant based on your local conditions.
+- **Weather Forecasting:** Access up-to-date weather data to plan your farming activities more effectively.
+- **Personal Dashboard:** Manage your profile, view past predictions, and save/share reports with ease.
+- **Seamless Sharing:** Generate shareable reports for collaboration or expert consultation.
 
-### Frontend
-- **Next.js 14** - React framework with App Router
-- **TypeScript** - Type-safe development
-- **Tailwind CSS** - Utility-first CSS framework
-- **Shadcn/ui** - Modern UI components
-- **React Hook Form** - Form handling and validation
-- **Zod** - Schema validation
+### Platform Highlights
 
-### Backend
-- **Next.js API Routes** - Serverless API endpoints
-- **MongoDB** - NoSQL database with Mongoose ODM
-- **JWT** - JSON Web Token authentication
-- **bcryptjs** - Password hashing
-- **SendGrid** - Email service for verification
+- Clean, intuitive interface for all devices
+- Fast, secure authentication and user management
+- All AI/ML processing handled by a robust backend (Hugging Face)
+- No technical expertise required—just upload, click, and get actionable insights!
 
-### Security & Performance
-- **Rate Limiting** - API protection
-- **Input Validation** - Zod schema validation
-- **Password Security** - bcrypt hashing with salt rounds
-- **CORS Protection** - Cross-origin request security
-- **Environment Variables** - Secure configuration management
+---
 
-## 🛠️ Installation & Setup
+<div align="center">
+  <img src="public/disease_pred.png" alt="Disease Prediction" width="220" style="margin:8px;"/>
+  <img src="public/recommendation.png" alt="Crop Recommendation" width="220" style="margin:8px;"/>
+  <img src="public/weather.png" alt="Weather Forecast" width="220" style="margin:8px;"/>
+  <img src="public/profile.png" alt="Profile Dashboard" width="220" style="margin:8px;"/>
+</div>
+
+---
+
+## 🛠️ Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+- Node.js 18+
 - MongoDB Atlas account
-- SendGrid account (for email features)
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/crop-care.git
-cd crop-care
+git clone https://github.com/D-roy-2003/CropCare.git
+cd CropCare
 ```
 
 ### 2. Install Dependencies
@@ -61,18 +55,23 @@ Create a `.env.local` file in the root directory:
 MONGODB_URI=your_mongodb_connection_string
 
 # JWT Configuration
-JWT_SECRET=your_super_secret_jwt_key_here
+JWT_SECRET=your_jwt_secret
 JWT_EXPIRES_IN=7d
 
 # Application URL
-NEXTAUTH_URL=http://localhost:3000
-
-# SendGrid Email Configuration
-SENDGRID_API_KEY=your_sendgrid_api_key
-EMAIL_FROM=your_verified_email@domain.com
+NEXTAUTH_URL=your_deployed_vercel_link
 
 # Security
 BCRYPT_ROUNDS=12
+
+GEMINI_API_KEY=your_gemini_api_key
+
+# Backend API
+BACKEND_URL=your_backend_api_url
+
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_FORMSPREE_ENDPOINT=your_formspree_endpoint
+NEXT_PUBLIC_SITE_URL=your_deployed_vercel_link
 ```
 
 ### 4. Run the Development Server
@@ -82,59 +81,38 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
+---
+
 ## 📁 Project Structure
 
+```plaintext
+CropCare/
+├── app/                    # Next.js App Router (API routes, pages, layouts, etc.)
+│   ├── api/                # API endpoints (disease prediction, recommendation, etc.)
+│   ├── disease-details/    # Disease details client and page
+│   ├── disease-prediction/ # Disease prediction UI
+│   ├── profile/            # User profile page
+│   ├── recommendation/     # Crop recommendation UI
+│   ├── shared/             # Shared report pages
+│   ├── weather/            # Weather forecast UI
+│   ├── ...                 # Other feature folders (login, signup, contact, etc.)
+│   └── globals.css         # Global styles
+├── backend-api/            # Backend API (ML model serving, Docker, etc.)
+├── components/             # Reusable UI components (navbar, footer, shadcn/ui, etc.)
+├── hooks/                  # Custom React hooks
+├── lib/                    # Utility libraries (auth, db, PDF, validation, etc.)
+├── mlmodel_training/       # Jupyter notebooks and scripts for ML model training
+├── models/                 # MongoDB models (User, DiseasePrediction, etc.)
+├── public/                 # Static assets (images, icons, etc.)
+├── styles/                 # Additional CSS files
+├── CropCare-mirror/        # Git mirror/backup (if used)
+├── middleware.ts           # Next.js middleware
+├── package.json            # Project dependencies and scripts
+├── README.md               # Project documentation
+└── ...                     # Config files, scripts, etc.
 ```
-crop-care/
-├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   │   └── auth/          # Authentication endpoints
-│   ├── (pages)/           # Application pages
-│   └── globals.css        # Global styles
-├── components/            # Reusable UI components
-│   ├── ui/               # Shadcn/ui components
-│   ├── navbar.tsx        # Navigation component
-│   └── footer.tsx        # Footer component
-├── lib/                   # Utility libraries
-│   ├── auth.ts           # Authentication utilities
-│   ├── mongodb.ts        # Database connection
-│   ├── validation.ts     # Zod schemas
-│   └── utils.ts          # Helper functions
-├── models/               # MongoDB models
-│   └── User.ts           # User model
-└── middleware.ts         # Next.js middleware
-```
 
-## 🔐 Authentication Features
-
-- **User Registration** with email verification
-- **Secure Login** with JWT tokens
-- **Password Reset** functionality
-- **Account Lockout** after failed attempts
-- **Rate Limiting** for security
-- **Remember Me** option
-
-## 🧪 Testing Authentication
-
-Visit `/test-auth` to run comprehensive authentication tests:
-- Database connectivity
-- User signup functionality
-- Login/logout processes
-- Error handling
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-1. Push your code to GitHub
-2. Connect your repository to Vercel
-3. Add environment variables in Vercel dashboard
-4. Deploy automatically
-
-### Manual Deployment
-```bash
-npm run build
-npm start
-```
+---
 
 ## 🤝 Contributing
 
@@ -144,21 +122,19 @@ npm start
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+---
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👥 Development Team
+---
 
-- **Debangshu Roy** - Full Stack Developer
-- **Prasenjit Datta** - ML Engineer
-- **Subhrajit Ghosh** - Frontend Developer
+## 👤 Developer
 
-## 🙏 Acknowledgments
+- [Debangshu Roy](https://github.com/D-roy-2003)
 
-- Thanks to the agricultural community for inspiration
-- OpenAI for AI/ML guidance
-- The open-source community for amazing tools
+---
 
 ## 📞 Support
 
