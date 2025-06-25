@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Search, Facebook, Twitter, Instagram, Linkedin } from "lucide-react"
+import { Search, Twitter, Instagram, Linkedin, Github } from "lucide-react"
 
 export function Footer() {
   return (
@@ -85,33 +85,38 @@ export function Footer() {
           <div>
             <h3 className="font-semibold text-lg mb-4">Follow Us</h3>
             <div className="flex space-x-4">
-              <Link href="#" className="text-gray-300 hover:text-green-400 transition-colors">
-                <Facebook className="h-5 w-5" />
-                <span className="sr-only">Facebook</span>
+              <Link href="https://github.com/D-roy-2003" className="text-gray-300 hover:text-green-400 transition-colors" aria-label="GitHub" target="_blank" rel="noopener noreferrer">
+                <Github className="h-5 w-5" />
               </Link>
-              <Link href="#" className="text-gray-300 hover:text-green-400 transition-colors">
+              <Link href="https://x.com/Boomboom_699" className="text-gray-300 hover:text-green-400 transition-colors" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer">
                 <Twitter className="h-5 w-5" />
-                <span className="sr-only">Twitter</span>
               </Link>
-              <Link href="#" className="text-gray-300 hover:text-green-400 transition-colors">
+              <Link href="https://www.instagram.com/king_roy2003/" className="text-gray-300 hover:text-green-400 transition-colors" aria-label="Instagram" target="_blank" rel="noopener noreferrer">
                 <Instagram className="h-5 w-5" />
-                <span className="sr-only">Instagram</span>
               </Link>
-              <Link href="#" className="text-gray-300 hover:text-green-400 transition-colors">
+              <Link href="https://www.linkedin.com/in/debangshu-roy-5531b8272/" className="text-gray-300 hover:text-green-400 transition-colors" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer">
                 <Linkedin className="h-5 w-5" />
-                <span className="sr-only">LinkedIn</span>
               </Link>
             </div>
           </div>
         </div>
 
         {/* Developer Team & Copyright */}
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center space-y-2">
-          <div>
-            <h4 className="font-semibold mb-2">Developer Team</h4>
-            <p className="text-gray-300 text-sm">Debangshu Roy • Prasenjit Datta • Subhrajit Ghosh</p>
+        <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-0">
+          <div className="flex items-center gap-2 justify-center md:justify-start">
+            <span className="text-gray-400 text-sm font-medium">Project Repo:</span>
+            <Link href="https://github.com/D-roy-2003/CropCare" target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-green-400 hover:text-green-300 font-semibold">
+              <Github className="h-5 w-5" />
+              <span>CropCare</span>
+            </Link>
           </div>
-          <p className="text-gray-400 text-sm">© 2025 Crop Care. All rights reserved.</p>
+          <div className="flex items-center gap-1 justify-center md:justify-center">
+            <span className="text-gray-400 text-sm font-medium">Developed by</span>
+            <Link href="https://github.com/D-roy-2003" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 font-semibold">Debangshu Roy</Link>
+          </div>
+          <div className="flex items-center justify-center md:justify-end">
+            <p className="text-gray-400 text-sm">© 2025 Crop Care. All rights reserved.</p>
+          </div>
         </div>
       </div>
     </footer>
