@@ -98,6 +98,10 @@ export default function DiseaseDetailsPage() {
     const prevention = searchParams.get('prevention')
     const imageUrl = searchParams.get('imageUrl')
 
+    console.log('searchParams:', {
+      disease, confidence, severity, treatment, prevention, imageUrl
+    });
+
     if (disease && confidence && severity && treatment && prevention && imageUrl) {
       setDiseaseData({
         disease,
@@ -201,6 +205,16 @@ export default function DiseaseDetailsPage() {
       ]
     }
     return treatments[disease as keyof typeof treatments] || [basicTreatment]
+  }
+
+  if (!isLoading && !diseaseData) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <h2 className="text-2xl font-bold mb-4">No details found</h2>
+        <p className="text-gray-600 mb-6">We couldn't find any disease details to display. Please try again from the prediction page.</p>
+        <Button onClick={() => router.push("/disease-prediction")}>Go to Disease Prediction</Button>
+      </div>
+    );
   }
 
   // ... rest of the component code ...
